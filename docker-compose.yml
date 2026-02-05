@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  # Main API server
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: final
+    command: api
+    ports:
+      - "8080:8080"
+    environment:
+      - NOVELIST_HTTP_PORT=8080
+      - NOVELIST_PROJECT=/data
+      - RUST_LOG=info
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Agent workers (scalable)
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: final
+    command: agent
+    environment:
+      - NOVELIST_API_URL=http://api:8080
+      - RUST_LOG=info
+    depends_on:
+      - api
+    restart: unless-stopped
+    deploy:
+      replicas: 2
+
+  # Ollama (optional local LLM)
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    # Uncomment for GPU support
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+  # Redis (for caching/sessions)
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  # Web UI (future)
+  web:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./web:/usr/share/nginx/html:ro
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  ollama_data:
+  redis_data:
+
+networks:
+  default:
+    name: novelist-network

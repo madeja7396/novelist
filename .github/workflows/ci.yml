@@ -1,0 +1,119 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  # Rust checks
+  rust:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-action@stable
+      with:
+        components: rustfmt, clippy
+    
+    - name: Cache Rust dependencies
+      uses: Swatinem/rust-cache@v2
+      with:
+        workspaces: rust
+    
+    - name: Check formatting
+      run: cd rust && cargo fmt -- --check
+    
+    - name: Run clippy
+      run: cd rust && cargo clippy -- -D warnings
+    
+    - name: Run tests
+      run: cd rust && cargo test --release
+    
+    - name: Run benchmarks
+      run: cd rust && cargo bench -- --test
+
+  # Go checks
+  go:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'
+        cache-dependency-path: go/go.sum
+    
+    - name: Download dependencies
+      run: cd go && go mod download
+    
+    - name: Run vet
+      run: cd go && go vet ./...
+    
+    - name: Run tests
+      run: cd go && go test -race -v ./...
+    
+    - name: Build
+      run: cd go && go build -v ./...
+
+  # Nix build
+  nix:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Nix
+      uses: DeterminateSystems/nix-installer-action@main
+    
+    - name: Setup Nix cache
+      uses: DeterminateSystems/magic-nix-cache-action@main
+    
+    - name: Check flake
+      run: nix flake check
+    
+    - name: Build Rust package
+      run: nix build .#novelist-core --no-link
+    
+    - name: Build Go package
+      run: nix build .#novelist-agent --no-link
+
+  # Python legacy tests
+  python:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Run tests
+      run: |
+        python tests/test_integration.py
+        python tests/test_phase1.py
+        python tests/test_phase2.py
+
+  # Code quality
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Check Nix formatting
+      uses: DeterminateSystems/nix-installer-action@main
+    
+    - name: Format Nix files
+      run: nix run nixpkgs#nixpkgs-fmt -- --check .

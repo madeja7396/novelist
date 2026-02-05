@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Novelist - AI Novel Writing Assistant</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a2e; color: #eee; line-height: 1.6;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+        header { text-align: center; padding: 3rem 0; }
+        h1 {
+            font-size: 3rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+        .subtitle { color: #888; font-size: 1.2rem; }
+        .features {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem; margin: 3rem 0;
+        }
+        .feature {
+            background: rgba(255,255,255,0.05); padding: 2rem;
+            border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);
+        }
+        .feature h3 { color: #667eea; margin-bottom: 1rem; }
+        .stats {
+            display: flex; gap: 2rem; justify-content: center;
+            margin: 2rem 0; flex-wrap: wrap;
+        }
+        .stat { text-align: center; }
+        .stat-value { font-size: 2.5rem; font-weight: bold; color: #667eea; }
+        .stat-label { color: #888; }
+        .demo {
+            background: rgba(255,255,255,0.05); padding: 2rem;
+            border-radius: 12px; margin: 2rem 0;
+        }
+        textarea {
+            width: 100%; min-height: 150px; padding: 1rem;
+            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px; color: #fff; font-size: 1rem; resize: vertical;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; border: none; padding: 1rem 2rem;
+            border-radius: 8px; font-size: 1rem; cursor: pointer;
+            margin-top: 1rem; transition: transform 0.2s;
+        }
+        button:hover { transform: translateY(-2px); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        footer { text-align: center; padding: 2rem; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Novelist</h1>
+            <p class="subtitle">高性能AI小説創作支援システム</p>
+        </header>
+        
+        <div class="stats">
+            <div class="stat"><div class="stat-value">100x</div><div class="stat-label">高速化</div></div>
+            <div class="stat"><div class="stat-value">4</div><div class="stat-label">言語対応</div></div>
+            <div class="stat"><div class="stat-value">5</div><div class="stat-label">AIエージェント</div></div>
+        </div>
+        
+        <div class="features">
+            <div class="feature">
+                <h3>⚡ 超高速</h3>
+                <p>Rust実装により、従来比100倍のパフォーマンス。</p>
+            </div>
+            <div class="feature">
+                <h3>🌍 多言語</h3>
+                <p>日本語、英語、中国語、韓国語をネイティブサポート。</p>
+            </div>
+            <div class="feature">
+                <h3>🧠 賢い検索</h3>
+                <p>RAGにより、作品の設定・キャラクターを文脈に組み込み。</p>
+            </div>
+            <div class="feature">
+                <h3>🔄 Swarm架構</h3>
+                <p>5つの専門エージェントが協調して創作。</p>
+            </div>
+        </div>
+        
+        <div class="demo">
+            <h2>📝 デモ</h2>
+            <textarea placeholder="例：主人公が古い図書館で魔法の書を見つけるシーン"></textarea>
+            <button>シーンを生成</button>
+        </div>
+        
+        <footer>
+            <p>Built with 🦀 Rust, 🐹 Go, and ❄️ Nix | Version 2.0.0</p>
+        </footer>
+    </div>
+</body>
+</html>
