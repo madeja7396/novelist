@@ -1,6 +1,7 @@
 # Core dependencies
 pyyaml>=6.0
 pydantic>=2.0.0
+numpy>=1.26.0
 
 # PAL (Provider Abstraction Layer)
 openai>=1.0.0

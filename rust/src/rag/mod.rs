@@ -1,5 +1,5 @@
 //! High-performance RAG (Retrieval-Augmented Generation)
-//! 
+//!
 //! Features:
 //! - Fast vector similarity search with SIMD
 //! - Memory-efficient indexing
@@ -7,9 +7,9 @@
 //! - Incremental updates
 
 use ndarray::{Array1, Array2, ArrayView1};
+use parking_lot::RwLock;
 use rayon::prelude::*;
 use std::collections::HashMap;
-use parking_lot::RwLock;
 
 pub mod embedding;
 
@@ -63,20 +63,20 @@ impl Retriever {
             dimension,
         }
     }
-    
+
     /// Add document
     pub fn add_document(&self, mut doc: Document) {
         // Generate embedding
         let embedding = self.embedder.embed(&doc.content);
         doc.embedding = Some(embedding);
-        
+
         let mut docs = self.documents.write();
         docs.push(doc);
-        
+
         // Invalidate embeddings matrix
         *self.embeddings.write() = None;
     }
-    
+
     /// Add multiple documents (parallel)
     pub fn add_documents(&self, docs: Vec<Document>) {
         // Generate embeddings in parallel
@@ -88,44 +88,44 @@ impl Retriever {
                 doc
             })
             .collect();
-        
+
         let mut docs_lock = self.documents.write();
         docs_lock.extend(docs_with_embeddings);
         *self.embeddings.write() = None;
     }
-    
+
     /// Build index (create embeddings matrix)
     pub fn build(&self) {
         let docs = self.documents.read();
-        
+
         if docs.is_empty() {
             return;
         }
-        
+
         // Build embeddings matrix
         let n_docs = docs.len();
         let mut embeddings = Array2::zeros((n_docs, self.dimension));
-        
+
         for (i, doc) in docs.iter().enumerate() {
             if let Some(emb) = &doc.embedding {
                 embeddings.row_mut(i).assign(emb);
             }
         }
-        
+
         *self.embeddings.write() = Some(embeddings);
     }
-    
+
     /// Search with cosine similarity
     pub fn search(&self, query: &str, top_k: usize) -> Vec<SearchResult> {
         let query_emb = self.embedder.embed(query);
-        
+
         let docs = self.documents.read();
         let embeddings_lock = self.embeddings.read();
-        
+
         if docs.is_empty() {
             return Vec::new();
         }
-        
+
         // Use pre-built matrix if available
         let similarities: Vec<f32> = if let Some(embeddings) = embeddings_lock.as_ref() {
             // Batch similarity computation
@@ -137,25 +137,23 @@ impl Retriever {
             // Compute on-the-fly
             docs.iter()
                 .map(|doc| {
-                    doc.embedding.as_ref()
+                    doc.embedding
+                        .as_ref()
                         .map(|emb| cosine_similarity(query_emb.view(), emb.view()))
                         .unwrap_or(0.0)
                 })
                 .collect()
         };
-        
+
         // Create results with indices
-        let mut results: Vec<(usize, f32)> = similarities
-            .into_iter()
-            .enumerate()
-            .collect();
-        
+        let mut results: Vec<(usize, f32)> = similarities.into_iter().enumerate().collect();
+
         // Sort by similarity (descending)
         results.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-        
+
         // Take top_k
         results.truncate(top_k);
-        
+
         // Convert to SearchResult
         results
             .into_iter()
@@ -167,11 +165,16 @@ impl Retriever {
             })
             .collect()
     }
-    
+
     /// Search by document type
-    pub fn search_by_type(&self, query: &str, doc_type: DocType, top_k: usize) -> Vec<SearchResult> {
+    pub fn search_by_type(
+        &self,
+        query: &str,
+        doc_type: DocType,
+        top_k: usize,
+    ) -> Vec<SearchResult> {
         let results = self.search(query, top_k * 2); // Get more, then filter
-        
+
         results
             .into_iter()
             .filter(|r| r.doc.doc_type == doc_type)
@@ -183,16 +186,16 @@ impl Retriever {
             })
             .collect()
     }
-    
+
     /// Get document count
     pub fn len(&self) -> usize {
         self.documents.read().len()
     }
-    
+
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
-    
+
     /// Clear all documents
     pub fn clear(&self) {
         self.documents.write().clear();
@@ -206,7 +209,7 @@ pub fn cosine_similarity(a: ArrayView1<f32>, b: ArrayView1<f32>) -> f32 {
     let dot = a.dot(&b);
     let norm_a = a.dot(&a).sqrt();
     let norm_b = b.dot(&b).sqrt();
-    
+
     if norm_a == 0.0 || norm_b == 0.0 {
         0.0
     } else {
@@ -217,11 +220,11 @@ pub fn cosine_similarity(a: ArrayView1<f32>, b: ArrayView1<f32>) -> f32 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_retriever() {
         let retriever = Retriever::new(128);
-        
+
         retriever.add_document(Document {
             id: "1".to_string(),
             content: "Magic comes from ancient ley lines".to_string(),
@@ -230,7 +233,7 @@ mod tests {
             metadata: HashMap::new(),
             embedding: None,
         });
-        
+
         retriever.add_document(Document {
             id: "2".to_string(),
             content: "Elara is a young mage".to_string(),
@@ -239,23 +242,23 @@ mod tests {
             metadata: HashMap::new(),
             embedding: None,
         });
-        
+
         retriever.build();
-        
+
         let results = retriever.search("magic power", 2);
         assert!(!results.is_empty());
-        
+
         // First result should be about magic
         assert!(results[0].score > 0.0);
     }
-    
+
     #[test]
     fn test_cosine_similarity() {
         let a = Array1::from(vec![1.0, 0.0, 0.0]);
         let b = Array1::from(vec![1.0, 0.0, 0.0]);
-        
+
         assert!((cosine_similarity(a.view(), b.view()) - 1.0).abs() < 0.001);
-        
+
         let c = Array1::from(vec![0.0, 1.0, 0.0]);
         assert!(cosine_similarity(a.view(), c.view()).abs() < 0.001);
     }

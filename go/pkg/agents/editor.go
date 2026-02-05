@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/novelist/novelist/go/pkg/models"
+	"github.com/novelist/novelist/pkg/models"
 )
 
 // EditorInput represents input for editor
@@ -32,7 +32,7 @@ func (a *EditorAgent) Execute(ctx context.Context, input interface{}) (*models.G
 	if !ok {
 		return nil, fmt.Errorf("invalid input type")
 	}
-	
+
 	systemPrompt := `あなたは熟練した小説編集者です。
 与えられた文章の問題を修正し、品質を向上させてください。
 
@@ -42,14 +42,14 @@ func (a *EditorAgent) Execute(ctx context.Context, input interface{}) (*models.G
 - テンポを改善
 - 原作の意味・意図は保持
 - 本文のみ出力（解説不要）`
-	
+
 	userPrompt := a.buildPrompt(in)
-	
+
 	params := GenerateParams{
 		Temperature: 0.4,
 		MaxTokens:   len(in.Text) + 500,
 	}
-	
+
 	return a.Generate(ctx, systemPrompt, userPrompt, params)
 }
 
@@ -60,7 +60,7 @@ func (a *EditorAgent) buildPrompt(input *EditorInput) string {
 			issueList.WriteString(fmt.Sprintf("- [%s] %s\n", issue.Category, issue.Description))
 		}
 	}
-	
+
 	return fmt.Sprintf(`## 編集対象の文章
 %s
 

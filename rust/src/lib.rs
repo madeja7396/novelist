@@ -1,5 +1,5 @@
 //! Novelist Core - High-performance library for AI novel writing
-//! 
+//!
 //! Features:
 //! - Fast text tokenization (Japanese/English/Chinese)
 //! - Vector similarity search for RAG
@@ -23,19 +23,19 @@ use thiserror::Error;
 pub enum NovelistError {
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
-    
+
     #[error("Serialization error: {0}")]
     Serialization(#[from] serde_json::Error),
-    
+
     #[error("Tokenization error: {0}")]
     Tokenization(String),
-    
+
     #[error("RAG error: {0}")]
     Rag(String),
-    
+
     #[error("Config error: {0}")]
     Config(String),
-    
+
     #[error("HTTP error: {0}")]
     Http(#[from] reqwest::Error),
 }

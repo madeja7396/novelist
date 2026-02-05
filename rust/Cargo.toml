@@ -15,9 +15,9 @@ crate-type = ["cdylib", "rlib", "staticlib"]
 # Core
 tokio = { version = "1.35", features = ["full", "rt-multi-thread"] }
 serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
+serde_json = "1.0.114"
 thiserror = "1.0"
-anyhow = "1.0"
+anyhow = "1.0.86"
 
 # Performance
 rayon = "1.8"
@@ -26,9 +26,9 @@ dashmap = "5.5"
 arc-swap = "1.6"
 
 # NLP / Tokenization
-unicode-segmentation = "1.10"
+unicode-segmentation = "1.11.0"
 unicode-normalization = "0.1"
-lindera = { version = "0.27", features = ["ipadic"] }  # Japanese tokenizer
+lindera = "0.27"  # Japanese tokenizer
 
 # Vector operations (RAG)
 ndarray = { version = "0.15", features = ["rayon", "serde"] }
