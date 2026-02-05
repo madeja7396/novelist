@@ -1,0 +1,291 @@
+{
+  "version": "1.0",
+  "updated": "2026-02-06T01:43:25.207883",
+  "tasks": [
+    {
+      "id": "P0-01",
+      "phase": 0,
+      "name": "Project Structure Setup",
+      "category": "infrastructure",
+      "status": "completed",
+      "updated_at": "2026-02-06T01:21:02.617002",
+      "completed_at": "2026-02-06T01:21:02.617011"
+    },
+    {
+      "id": "P0-02",
+      "phase": 0,
+      "name": "Bible Parser",
+      "category": "infrastructure",
+      "status": "completed",
+      "updated_at": "2026-02-06T01:21:02.698709",
+      "completed_at": "2026-02-06T01:21:02.698753"
+    },
+    {
+      "id": "P0-03",
+      "phase": 0,
+      "name": "Character Loader",
+      "category": "infrastructure",
+      "status": "completed",
+      "updated_at": "2026-02-06T01:21:02.773041",
+      "completed_at": "2026-02-06T01:21:02.773073"
+    },
+    {
+      "id": "P0-04",
+      "phase": 0,
+      "name": "Local Provider (Ollama)",
+      "category": "pal",
+      "status": "completed",
+      "updated_at": "2026-02-06T01:21:02.847701",
+      "completed_at": "2026-02-06T01:21:02.847732"
+    },
+    {
+      "id": "P0-05",
+      "phase": 0,
+      "name": "Writer Agent (Basic)",
+      "category": "agent",
+      "status": "completed",
+      "updated_at": "2026-02-06T01:21:02.917338",
+      "completed_at": "2026-02-06T01:21:02.917362"
+    },
+    {
+      "id": "P0-06",
+      "phase": 0,
+      "name": "CLI Interface",
+      "category": "ui",
+      "status": "completed",
+      "updated_at": "2026-02-06T01:21:02.989697",
+      "completed_at": "2026-02-06T01:21:02.989726"
+    },
+    {
+      "id": "P0-07",
+      "phase": 0,
+      "name": "Integration Test",
+      "category": "testing",
+      "status": "pending"
+    },
+    {
+      "id": "P1-01",
+      "phase": 1,
+      "name": "SceneSpec Schema",
+      "category": "infrastructure",
+      "status": "completed",
+      "updated_at": "2026-02-06T01:43:24.761948",
+      "completed_at": "2026-02-06T01:43:24.761988"
+    },
+    {
+      "id": "P1-02",
+      "phase": 1,
+      "name": "Director Agent",
+      "category": "agent",
+      "status": "completed",
+      "updated_at": "2026-02-06T01:43:24.857737",
+      "completed_at": "2026-02-06T01:43:24.857775"
+    },
+    {
+      "id": "P1-03",
+      "phase": 1,
+      "name": "Memory: Episodic",
+      "category": "memory",
+      "status": "completed",
+      "updated_at": "2026-02-06T01:43:24.936134",
+      "completed_at": "2026-02-06T01:43:24.936167"
+    },
+    {
+      "id": "P1-04",
+      "phase": 1,
+      "name": "Memory: Facts",
+      "category": "memory",
+      "status": "completed",
+      "updated_at": "2026-02-06T01:43:24.999613",
+      "completed_at": "2026-02-06T01:43:24.999663"
+    },
+    {
+      "id": "P1-05",
+      "phase": 1,
+      "name": "Memory: Foreshadowing",
+      "category": "memory",
+      "status": "completed",
+      "updated_at": "2026-02-06T01:43:25.069908",
+      "completed_at": "2026-02-06T01:43:25.069946"
+    },
+    {
+      "id": "P1-06",
+      "phase": 1,
+      "name": "Writer Agent (SceneSpec)",
+      "category": "agent",
+      "status": "pending"
+    },
+    {
+      "id": "P1-07",
+      "phase": 1,
+      "name": "Prompt Assembler",
+      "category": "infrastructure",
+      "status": "pending"
+    },
+    {
+      "id": "P1-08",
+      "phase": 1,
+      "name": "2-Stage Pipeline",
+      "category": "infrastructure",
+      "status": "completed",
+      "updated_at": "2026-02-06T01:43:25.142222",
+      "completed_at": "2026-02-06T01:43:25.142246"
+    },
+    {
+      "id": "P1-09",
+      "phase": 1,
+      "name": "Committer Agent (Basic)",
+      "category": "agent",
+      "status": "completed",
+      "updated_at": "2026-02-06T01:43:25.207855",
+      "completed_at": "2026-02-06T01:43:25.207880"
+    },
+    {
+      "id": "P1-10",
+      "phase": 1,
+      "name": "Regression Test Suite",
+      "category": "testing",
+      "status": "pending"
+    },
+    {
+      "id": "P1-11",
+      "phase": 1,
+      "name": "Metrics Calculator",
+      "category": "testing",
+      "status": "pending"
+    },
+    {
+      "id": "P1-12",
+      "phase": 1,
+      "name": "Test Runner",
+      "category": "testing",
+      "status": "pending"
+    },
+    {
+      "id": "P1-13",
+      "phase": 1,
+      "name": "ICL Examples",
+      "category": "infrastructure",
+      "status": "pending"
+    },
+    {
+      "id": "P1-14",
+      "phase": 1,
+      "name": "Web UI (Basic)",
+      "category": "ui",
+      "status": "pending"
+    },
+    {
+      "id": "P1-15",
+      "phase": 1,
+      "name": "Phase 1 Integration",
+      "category": "testing",
+      "status": "pending"
+    },
+    {
+      "id": "P2-01",
+      "phase": 2,
+      "name": "PAL Interface Definition",
+      "category": "pal",
+      "status": "pending"
+    },
+    {
+      "id": "P2-02",
+      "phase": 2,
+      "name": "Cloud Provider (OpenAI)",
+      "category": "pal",
+      "status": "pending"
+    },
+    {
+      "id": "P2-03",
+      "phase": 2,
+      "name": "Cloud Provider (Anthropic)",
+      "category": "pal",
+      "status": "pending"
+    },
+    {
+      "id": "P2-04",
+      "phase": 2,
+      "name": "Provider Routing",
+      "category": "pal",
+      "status": "pending"
+    },
+    {
+      "id": "P2-05",
+      "phase": 2,
+      "name": "ContinuityChecker Agent",
+      "category": "agent",
+      "status": "pending"
+    },
+    {
+      "id": "P2-06",
+      "phase": 2,
+      "name": "StyleEditor Agent",
+      "category": "agent",
+      "status": "pending"
+    },
+    {
+      "id": "P2-07",
+      "phase": 2,
+      "name": "Committer Agent (Full)",
+      "category": "agent",
+      "status": "pending"
+    },
+    {
+      "id": "P2-08",
+      "phase": 2,
+      "name": "Revision Loop",
+      "category": "infrastructure",
+      "status": "pending"
+    },
+    {
+      "id": "P2-09",
+      "phase": 2,
+      "name": "Token/Cost Tracking",
+      "category": "infrastructure",
+      "status": "pending"
+    },
+    {
+      "id": "P2-10",
+      "phase": 2,
+      "name": "Execution Log",
+      "category": "infrastructure",
+      "status": "pending"
+    },
+    {
+      "id": "P2-11",
+      "phase": 2,
+      "name": "Web UI (Enhanced)",
+      "category": "ui",
+      "status": "pending"
+    },
+    {
+      "id": "P2-12",
+      "phase": 2,
+      "name": "Security Implementation",
+      "category": "infrastructure",
+      "status": "pending"
+    },
+    {
+      "id": "P2-13",
+      "phase": 2,
+      "name": "Export/Import",
+      "category": "infrastructure",
+      "status": "pending"
+    },
+    {
+      "id": "P2-14",
+      "phase": 2,
+      "name": "Performance Optimization",
+      "category": "infrastructure",
+      "status": "pending"
+    },
+    {
+      "id": "P2-15",
+      "phase": 2,
+      "name": "Phase 2 Integration",
+      "category": "testing",
+      "status": "pending"
+    }
+  ]
+}
