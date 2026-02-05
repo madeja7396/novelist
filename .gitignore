@@ -1,0 +1,75 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific - Sensitive data
+config.local.yaml
+*.local.json
+.env
+.env.local
+
+# API Keys (should be in environment or credential store)
+.api_key
+*.key
+
+# Runtime data
+runs/*.jsonl
+runs/*.log
+*.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Test outputs
+test_output/
+test_results/
+
+# Backup files
+*.bak
+*.backup
+*.orig
+
+# Large model files
+*.gguf
+*.bin
+models/
+
+# Node modules (if using web UI)
+node_modules/

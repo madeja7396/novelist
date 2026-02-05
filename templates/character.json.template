@@ -1,0 +1,88 @@
+{
+  "_meta": {
+    "description": "Character Card Template - SSOT文書",
+    "usage": "Writerへのコンテキストとして使用",
+    "update_rule": "確定したキャラ付けのみ。成長はepisodicで追跡。"
+  },
+  
+  "id": "char_{unique_id}",
+  "name": {
+    "full": "キャラクター名",
+    "short": "省略名（呼称）",
+    "aliases": ["異名", "称号"]
+  },
+  
+  "basic": {
+    "age": 0,
+    "gender": "male|female|other|unknown",
+    "race": "人間|エルフ|etc",
+    "occupation": "職業・役割",
+    "affiliation": "所属組織"
+  },
+  
+  "language": {
+    "first_person": "私|俺|わたくし|etc - 一人称",
+    "second_person": "君|お前|あなた|貴様|etc - 二人称",
+    "sentence_endings": "~だ|~です|~である|etc - 文末の特徴",
+    "speech_pattern": "話し方の詳細（丁寧/乱暴/冗長/簡潔/etc）",
+    "dialect": "標準語|方言|外国語訛り",
+    "verbal_tics": ["口癖1", "口癖2"],
+    "forbidden_words": ["絶対に使わない言葉1", "絶対に使わない言葉2"]
+  },
+  
+  "personality": {
+    "values": ["大切にしている価値観1", "価値観2"],
+    "motivations": ["行動の原動力1", "原動力2"],
+    "fears": ["恐怖・嫌悪1", "恐怖・嫌悪2"],
+    "strengths": ["長所1", "長所2"],
+    "weaknesses": ["短所1", "短所2"],
+    "mbti": "optional - 参考値",
+    "alignment": "optional - D&Dアライメント参考"
+  },
+  
+  "relationships": {
+    "char_id_1": {
+      "name": "相手の名前",
+      "relation": "関係性（友人/敵/家族/etc）",
+      "description": "具体的な関係の説明",
+      "dynamic": "現在の関係性の動向"
+    }
+  },
+  
+  "background": {
+    "origin": "出身・生い立ち",
+    "key_events": [
+      {"event": "人生の転機1", "impact": "与えた影響"},
+      {"event": "人生の転機2", "impact": "与えた影響"}
+    ]
+  },
+  
+  "appearance": {
+    "description": "外見の特徴",
+    "distinctive_features": ["特徴1", "特徴2"],
+    "clothing": "服装の特徴"
+  },
+  
+  "abilities": {
+    "skills": ["特技1", "特技2"],
+    "magic": "魔法能力（あれば）",
+    "weakness": "能力上の弱点"
+  },
+  
+  "narrative": {
+    "role": "protagonist|deuteragonist|supporting|antagonist|etc",
+    "character_arc": "キャラクターの成長予定",
+    "secrets": ["秘密1", "秘密2 - 読者には明かされるが他キャラには"],
+    "plot_hooks": ["このキャラを絡めたい伏線1", "伏線2"]
+  },
+  
+  "writer_notes": {
+    " portrayal_tips": "書く際の注意点",
+    "common_mistakes": "避けるべき解釈",
+    "inspirations": "参考にした原型"
+  },
+  
+  "_version": "1.0",
+  "_created": "YYYY-MM-DD",
+  "_updated": "YYYY-MM-DD"
+}

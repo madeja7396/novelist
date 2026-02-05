@@ -1,0 +1,64 @@
+# Episodic Memory（直近要約）
+
+> **Template**: SSOT文書 - 可変情報
+> **Usage**: 直近の出来事の要約。古いものは上書き・要約される。
+> **Warning**: このファイルは頻繁に更新されます。Git追跡は推奨されます。
+
+---
+
+## Current Arc: {アーク名}
+
+### Arc Summary
+{現在のアークの全体要約（100-200字）}
+
+---
+
+## Recent Scenes（直近5シーン）
+
+### Scene {number}: {scene_name}
+- **Chapter**: {chapter_number}
+- **POV**: {キャラクター名}
+- **Location**: {場所}
+- **Key Events**:
+  - {出来事1}
+  - {出来事2}
+- **Character Status Changes**:
+  - {キャラ名}: {変化}
+- **Emotional State**: {感情状態}
+- **Created**: {YYYY-MM-DD HH:MM}
+
+---
+
+## Character Status（キャラクター現在状況）
+
+| Character | Location | Condition | Recent Action | Updated |
+|-----------|----------|-----------|---------------|---------|
+| {名前} | {場所} | {状態} | {直近の行動} | {日時} |
+
+---
+
+## Active Plot Threads（進行中のプロット）
+
+1. **{プロット名}**
+   - Status: {進行中/停滞/解決間近}
+   - Last Development: {直近の展開}
+   - Next Expected: {予想される展開}
+
+---
+
+## Unresolved Tensions（未解決の緊張）
+
+- {キャラA}と{キャラB}の対立
+- {場所}での危機
+- {秘密}が暴かれるリスク
+
+---
+
+## Next Scene Candidates（次シーン候補）
+
+- [ ] {シーン案1}
+- [ ] {シーン案2}
+
+---
+
+*Last updated: {YYYY-MM-DD HH:MM} by {agent|user}*

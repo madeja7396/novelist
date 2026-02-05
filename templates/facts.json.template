@@ -1,0 +1,40 @@
+{
+  "_meta": {
+    "description": "Immutable Facts - SSOT文書",
+    "usage": "確定した事実のみを格納。削除・変更禁止。追加のみ。",
+    "warning": "肥大化するとパフォーマンスが劣化します。可変情報はepisodic.mdへ。"
+  },
+  
+  "facts": [
+    {
+      "id": "f001",
+      "content": "主人公エリアは17歳の少女である",
+      "category": "immutable",
+      "source": "chapter_01",
+      "created_at": "2026-02-06",
+      "tags": ["character", "protagonist", "age"]
+    },
+    {
+      "id": "f002",
+      "content": "魔導国は西の山脈を越えた場所にある",
+      "category": "immutable",
+      "source": "chapter_01",
+      "created_at": "2026-02-06",
+      "tags": ["world", "location"]
+    },
+    {
+      "id": "f003",
+      "content": "光の剣は王家に伝わる宝剣であり、闇の力に強い",
+      "category": "immutable",
+      "source": "chapter_02",
+      "created_at": "2026-02-07",
+      "tags": ["item", "lore"]
+    }
+  ],
+  
+  "_stats": {
+    "total_facts": 3,
+    "last_updated": "2026-02-07T10:00:00Z",
+    "version": "1.0"
+  }
+}

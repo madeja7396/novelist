@@ -1,0 +1,223 @@
+# Novelist Project Configuration
+# プロジェクト全体の設定とプロバイダー振り分け
+
+# =============================================================================
+# VERSION
+# =============================================================================
+version: "1.0"
+project_name: "My Novel Project"
+created_at: "2026-02-06"
+
+# =============================================================================
+# PROVIDER CONFIGURATION
+# =============================================================================
+# Provider Abstraction Layer (PAL) の設定
+# 各エージェントにどのモデル・プロバイダーを使うか指定
+
+provider:
+  # デフォルトプロバイダー（未指定のエージェントに使用）
+  default: "local_ollama"
+  
+  # 利用可能なプロバイダー定義
+  available:
+    local_ollama:
+      type: "ollama"
+      model: "qwen3:1.7b"
+      base_url: "http://localhost:11434"
+      timeout: 120
+      
+    openai_gpt4:
+      type: "openai"
+      model: "gpt-4"
+      api_key_env: "OPENAI_API_KEY"  # 環境変数名
+      timeout: 60
+      
+    openai_gpt35:
+      type: "openai"
+      model: "gpt-3.5-turbo"
+      api_key_env: "OPENAI_API_KEY"
+      timeout: 60
+      
+    anthropic_claude:
+      type: "anthropic"
+      model: "claude-3-sonnet-20240229"
+      api_key_env: "ANTHROPIC_API_KEY"
+      timeout: 60
+  
+  # エージェント別プロバイダー振り分け
+  # エージェントの特性に応じて最適なモデルを選択
+  routing:
+    # Director: 長文・構造化が得意、JSON出力が安定
+    director: "local_ollama"
+    
+    # Writer: 創作が得意、冗長抑制
+    writer: "local_ollama"
+    
+    # Checker: 厳格・短文でOK、精度重視ならクラウド
+    checker: "local_ollama"
+    
+    # Editor: 文章整形、創作要素あり
+    editor: "local_ollama"
+    
+    # Committer: 構造化抽出、JSON扱い
+    committer: "local_ollama"
+
+# =============================================================================
+# CONTEXT BUDGETS
+# =============================================================================
+# Prompt Program の各ブロックのトークン上限
+# 長編では必ずコンテキストが溢れるため、圧縮戦略を指定
+
+context:
+  budgets:
+    # 世界観・文体規約
+    bible: 1500
+    
+    # キャラクターカード（全員分の合計）
+    characters: 1200
+    
+    # 確定事実（Facts）- 肥大化注意
+    facts: 600
+    
+    # 直近要約（Episodic）- 可変、上書きされる
+    recap: 400
+    
+    # ICL Examples（悪い例→良い例）
+    icl: 600
+    
+    # SceneSpec（設計図）
+    scenespec: 500
+    
+  # 圧縮戦略
+  compression:
+    # Facts が上限を超えた場合
+    facts_overflow: "error"  # error|warn|archive
+    
+    # Episodic の保持シーン数
+    episodic_keep_scenes: 5
+    
+    # 要約の自動生成閾値（シーン数）
+    auto_summarize_threshold: 10
+
+# =============================================================================
+# SWARM CONFIGURATION
+# =============================================================================
+# Agent Swarm の動作設定
+
+swarm:
+  # 検査→修正の最大繰り返し回数
+  # 無限ループ防止のため 1 が推奨
+  max_revision: 1
+  
+  # 修正しても失敗する場合の挙動
+  on_persistent_failure: "ask_user"  # ask_user|accept|reject
+  
+  # 並列実行設定
+  parallel:
+    # 独立したエージェントを並列実行
+    enabled: true
+    max_concurrent: 2
+
+# =============================================================================
+# GENERATION PARAMETERS
+# =============================================================================
+# 生成パラメータのデフォルト値
+# エージェント・シーン別に上書き可能
+
+generation:
+  default:
+    temperature: 0.7
+    max_tokens: 2000
+    top_p: 0.9
+    
+  # エージェント別オーバーライド
+  by_agent:
+    director:
+      temperature: 0.5  # 構造化出力は低め
+      max_tokens: 1500
+      
+    writer:
+      temperature: 0.8  # 創作は高め
+      max_tokens: 2000
+      
+    checker:
+      temperature: 0.3  # 検査は厳密に
+      max_tokens: 1000
+      
+    editor:
+      temperature: 0.4
+      max_tokens: 2000
+      
+    committer:
+      temperature: 0.2  # 抽出は正確に
+      max_tokens: 1000
+
+# =============================================================================
+# OUTPUT SETTINGS
+# =============================================================================
+
+output:
+  # 章のファイル命名規則
+  chapter_filename_template: "chapter_{number:03d}.md"
+  
+  # SceneSpec の保存
+  save_scenespec: true
+  scenespec_filename_template: "scenes/scene_{id}.json"
+  
+  # 自動バックアップ
+  auto_backup: true
+  backup_interval_chapters: 5
+
+# =============================================================================
+# LOGGING
+# =============================================================================
+
+logging:
+  # 実行ログの保存
+  enabled: true
+  
+  # runs/ 以下のファイル名
+  run_log_filename_template: "run_{timestamp}.jsonl"
+  
+  # 保存内容
+  save_prompts: true      # 実際に送信されたプロンプト
+  save_outputs: true      # 生成された出力
+  save_metrics: true      # トークン数・コスト・時間
+  
+  # ログレベル
+  level: "info"  # debug|info|warn|error
+
+# =============================================================================
+# QUALITY THRESHOLDS
+# =============================================================================
+# 品質メトリクスの閾値（novelist-tester で使用）
+
+quality:
+  # メタ発言率（例：「この物語では」「読者の皆さん」）
+  meta_speech_rate_max: 0.01  # 1%
+  
+  # 反復率（n-gram重複）
+  repetition_rate_max: 0.05   # 5%
+  
+  # 事実矛盾数
+  fact_contradictions_max: 0
+  
+  # キャラ逸脱数
+  character_deviations_max: 0
+
+# =============================================================================
+# SECURITY
+# =============================================================================
+
+security:
+  # APIキーの保存先
+  # - "env": 環境変数（デフォルト）
+  # - "keychain": OSのキーチェーン/資格情報ストア
+  # - "file": 暗号化ファイル（開発時のみ）
+  api_key_storage: "env"
+  
+  # クラウド使用時の送信範囲表示
+  show_transmission_scope: true
+  
+  # ローカル推論をデフォルトに
+  enforce_local_default: true

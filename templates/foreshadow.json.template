@@ -1,0 +1,61 @@
+{
+  "_meta": {
+    "description": "Foreshadowing Tracker - SSOT文書",
+    "usage": "伏線の回収状況を追跡。Directorが未回収伏線を参照。",
+    "status_definitions": {
+      "unresolved": "未回収 - まだ回収されていない伏線",
+      "resolved": "回収済み - 明示的に回収された",
+      "abandoned": "破棄 - 回収されないまま終わった"
+    }
+  },
+  
+  "foreshadowings": [
+    {
+      "id": "fs001",
+      "content": "「血の裏切り者が門を封印する」という予言",
+      "status": "unresolved",
+      "created_in": "chapter_01",
+      "created_at": "2026-02-06",
+      "target_resolution": "chapter_05",
+      "related_chapters": ["chapter_01", "chapter_03"],
+      "resolution_chapter": null,
+      "resolution_note": null,
+      "priority": "high",
+      "tags": ["prophecy", "main_plot"]
+    },
+    {
+      "id": "fs002",
+      "content": "主人公の父親が魔導師だったという事実",
+      "status": "resolved",
+      "created_in": "chapter_02",
+      "created_at": "2026-02-07",
+      "target_resolution": null,
+      "related_chapters": ["chapter_02", "chapter_04"],
+      "resolution_chapter": "chapter_04",
+      "resolution_note": "師匠の告白シーンで明示的に回収",
+      "priority": "medium",
+      "tags": ["character", "backstory"]
+    },
+    {
+      "id": "fs003",
+      "content": "街の古井戸から聞こえる不気味な音",
+      "status": "unresolved",
+      "created_in": "chapter_03",
+      "created_at": "2026-02-08",
+      "target_resolution": "chapter_06",
+      "related_chapters": ["chapter_03"],
+      "resolution_chapter": null,
+      "resolution_note": null,
+      "priority": "low",
+      "tags": ["mystery", "side_plot"]
+    }
+  ],
+  
+  "_stats": {
+    "total": 3,
+    "unresolved": 2,
+    "resolved": 1,
+    "abandoned": 0,
+    "last_updated": "2026-02-08T15:00:00Z"
+  }
+}

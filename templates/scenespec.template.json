@@ -1,0 +1,73 @@
+{
+  "_meta": {
+    "description": "SceneSpec - Directorの出力形式",
+    "usage": "Writerへの設計図として使用",
+    "generated_by": "Director Agent",
+    "version": "1.0"
+  },
+  
+  "scene": {
+    "id": "scene_{chapter}_{sequence}",
+    "chapter": 1,
+    "sequence_in_chapter": 1,
+    "title": "シーンの短いタイトル"
+  },
+  
+  "narrative": {
+    "objective": "このシーンが達成すべき目的（必須）",
+    "summary": "シーンの概要（2-3文）",
+    "key_events": [
+      "必ず起こる出来事1",
+      "必ず起こる出来事2",
+      "必ず起こる出来事3"
+    ],
+    "revelations": [
+      "明かされる情報1",
+      "明かされる情報2"
+    ],
+    "hooks": [
+      "次シーンへのフック1",
+      "次シーンへのフック2"
+    ]
+  },
+  
+  "constraints": {
+    "pov_character": "視点キャラクター名（必須）",
+    "location": "場所",
+    "time": "時間帯・季節",
+    "duration": "シーン内の時間経過",
+    "characters_present": ["登場キャラ1", "登場キャラ2"],
+    "characters_mentioned": ["言及のみのキャラ"],
+    "mood": "雰囲気（緊張/安らぎ/混乱/etc）",
+    "tone_shift": "途中で変わる雰囲気（あれば）"
+  },
+  
+  "continuity": {
+    "facts_to_reinforce": [
+      "強化すべき事実ID"
+    ],
+    "foreshadowing_to_resolve": [
+      "回収すべき伏線ID"
+    ],
+    "foreshadowing_to_plant": [
+      "新たに仕込む伏線"
+    ],
+    "references_to_past": [
+      "過去シーンの参照"
+    ]
+  },
+  
+  "style": {
+    "pacing": "fast|normal|slow",
+    "dialogue_ratio": "high|medium|low",
+    "sensory_focus": ["visual", "auditory", "olfactory", "tactile"],
+    "techniques_to_use": ["比喩",”内省",etc],
+    "avoid": ["避けるべき表現", "禁止ワード"]
+  },
+  
+  "output": {
+    "target_length": "short|medium|long",
+    "estimated_tokens": 1500,
+    "ending_type": "cliffhanger|resolution|transition"
+  }
+}
