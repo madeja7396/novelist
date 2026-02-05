@@ -1,0 +1,99 @@
+[package]
+name = "novelist-core"
+version = "0.2.0"
+edition = "2021"
+authors = ["Novelist Team"]
+description = "High-performance core for AI novel writing assistant"
+license = "MIT"
+repository = "https://github.com/yourusername/novelist"
+
+[lib]
+name = "novelist_core"
+crate-type = ["cdylib", "rlib", "staticlib"]
+
+[dependencies]
+# Core
+tokio = { version = "1.35", features = ["full", "rt-multi-thread"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+anyhow = "1.0"
+
+# Performance
+rayon = "1.8"
+parking_lot = "0.12"
+dashmap = "5.5"
+arc-swap = "1.6"
+
+# NLP / Tokenization
+unicode-segmentation = "1.10"
+unicode-normalization = "0.1"
+lindera = { version = "0.27", features = ["ipadic"] }  # Japanese tokenizer
+
+# Vector operations (RAG)
+ndarray = { version = "0.15", features = ["rayon", "serde"] }
+nalgebra = { version = "0.32", features = ["serde-serialize"] }
+
+# HTTP client
+reqwest = { version = "0.11", features = ["json", "stream", "rustls-tls"] }
+
+# WebAssembly (optional)
+wasm-bindgen = { version = "0.2", optional = true }
+wasm-bindgen-futures = { version = "0.4", optional = true }
+js-sys = { version = "0.3", optional = true }
+web-sys = { version = "0.3", optional = true }
+
+# i18n
+rust-i18n = "3.0"
+fluent = "0.16"
+unic-langid = "0.9"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# CLI
+clap = { version = "4.4", features = ["derive"] }
+
+# Config
+toml = "0.8"
+config = "0.14"
+
+# Time
+chrono = { version = "0.4", features = ["serde"] }
+
+# Regex
+regex = "1.10"
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["async_tokio"] }
+tokio-test = "0.4"
+proptest = "1.4"
+
+[[bench]]
+name = "rag_benchmark"
+harness = false
+
+[[bench]]
+name = "tokenizer_benchmark"
+harness = false
+
+[features]
+default = ["full"]
+full = []
+wasm = ["wasm-bindgen", "wasm-bindgen-futures", "js-sys", "web-sys"]
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.release-wasm]
+inherits = "release"
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
