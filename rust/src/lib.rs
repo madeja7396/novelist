@@ -6,6 +6,7 @@
 //! - Internationalization support
 //! - WebAssembly bindings
 
+pub mod ffi;
 pub mod i18n;
 pub mod models;
 pub mod rag;
