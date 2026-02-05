@@ -19,6 +19,7 @@ from memory.episodic import EpisodicMemoryManager
 from memory.facts import FactsManager
 from memory.foreshadowing import ForeshadowingManager
 from rag.retriever import SimpleRetriever
+from pipeline.two_stage import TwoStagePipeline
 
 
 class TestPhase1Features(unittest.TestCase):
@@ -142,6 +143,22 @@ class TestPhase1Features(unittest.TestCase):
         # Agent-specific search
         agent_results = retriever.search_for_agent("magic power", "director")
         self.assertGreater(len(agent_results), 0)
+
+    def test_two_stage_memory_updates_use_chapter(self):
+        """Ensure memory updates use provided chapter number."""
+        pipeline = TwoStagePipeline(self.project_path)
+        scenespec = {
+            "narrative": {"key_events": ["Event A"]},
+            "continuity": {"foreshadowing_to_plant": ["A secret omen"]},
+        }
+
+        pipeline._update_memory(2, 1, "勇者は王である。", scenespec)
+
+        episodic = (self.project_path / "memory" / "episodic.md").read_text(encoding="utf-8")
+        self.assertIn("Chapter 2", episodic)
+
+        facts_data = (self.project_path / "memory" / "facts.json").read_text(encoding="utf-8")
+        self.assertIn("chapter_002", facts_data)
 
 
 class TestSessionManagement(unittest.TestCase):

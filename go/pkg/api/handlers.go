@@ -14,6 +14,7 @@ import (
 type Handler struct {
 	swarm  *agents.Swarm
 	logger *zerolog.Logger
+	stats  *StatsStore
 }
 
 // NewHandler creates a new handler
@@ -21,6 +22,7 @@ func NewHandler(swarm *agents.Swarm, logger *zerolog.Logger) *Handler {
 	return &Handler{
 		swarm:  swarm,
 		logger: logger,
+		stats:  NewStatsStore(),
 	}
 }
 
@@ -33,12 +35,14 @@ func (h *Handler) GenerateScene(c *gin.Context) {
 		})
 		return
 	}
-	
+
+	h.stats.RecordRequest()
+
 	// Generate ID if not provided
 	if req.ID == "" {
 		req.ID = uuid.New().String()
 	}
-	
+
 	// Set defaults
 	if req.Chapter == 0 {
 		req.Chapter = 1
@@ -49,13 +53,13 @@ func (h *Handler) GenerateScene(c *gin.Context) {
 	if req.WordCount == 0 {
 		req.WordCount = 1000
 	}
-	
+
 	h.logger.Info().
 		Str("request_id", req.ID).
 		Int("chapter", req.Chapter).
 		Int("scene", req.Scene).
 		Msg("Generating scene")
-	
+
 	// Generate
 	resp, err := h.swarm.GenerateScene(c, &req)
 	if err != nil {
@@ -65,23 +69,23 @@ func (h *Handler) GenerateScene(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	c.JSON(http.StatusOK, resp)
 }
 
 // Health handles health check
 func (h *Handler) Health(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
-		"status": "healthy",
+		"status":  "healthy",
 		"version": "2.0.0",
 	})
 }
 
 // Stats handles stats request
 func (h *Handler) Stats(c *gin.Context) {
-	// TODO: Implement stats
+	total, perMinute := h.stats.Snapshot()
 	c.JSON(http.StatusOK, gin.H{
-		"requests_total": 0,
-		"requests_per_minute": 0,
+		"requests_total":      total,
+		"requests_per_minute": perMinute,
 	})
 }

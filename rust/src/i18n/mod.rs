@@ -1,5 +1,5 @@
 //! Internationalization (i18n) support
-//! 
+//!
 //! Supported languages:
 //! - Japanese (ja)
 //! - English (en)
@@ -28,7 +28,7 @@ impl Language {
             _ => None,
         }
     }
-    
+
     pub fn code(&self) -> &'static str {
         match self {
             Language::Japanese => "ja",
@@ -37,7 +37,7 @@ impl Language {
             Language::Korean => "ko",
         }
     }
-    
+
     pub fn name(&self) -> &'static str {
         match self {
             Language::Japanese => "日本語",
@@ -58,13 +58,13 @@ impl I18n {
     pub fn new(lang_code: &str) -> Self {
         let language = Language::from_code(lang_code).unwrap_or(Language::Japanese);
         let translations = load_translations(&language);
-        
+
         Self {
             language,
             translations,
         }
     }
-    
+
     /// Get translation
     pub fn t(&self, key: &str) -> &str {
         self.translations
@@ -72,22 +72,22 @@ impl I18n {
             .map(|s| s.as_str())
             .unwrap_or(key)
     }
-    
+
     /// Get current language
     pub fn language(&self) -> Language {
         self.language
     }
-    
+
     /// Format with arguments
     pub fn tf(&self, key: &str, args: &[&str]) -> String {
         let template = self.t(key);
         let mut result = template.to_string();
-        
+
         for (i, arg) in args.iter().enumerate() {
             let placeholder = format!("{{{}}}", i);
             result = result.replace(&placeholder, arg);
         }
-        
+
         result
     }
 }
@@ -101,11 +101,14 @@ impl Default for I18n {
 /// Load translations for language
 fn load_translations(lang: &Language) -> HashMap<String, String> {
     let mut map = HashMap::new();
-    
+
     match lang {
         Language::Japanese => {
             map.insert("welcome".into(), "ようこそ".into());
-            map.insert("project_created".into(), "プロジェクトを作成しました".into());
+            map.insert(
+                "project_created".into(),
+                "プロジェクトを作成しました".into(),
+            );
             map.insert("scene_generated".into(), "シーンを生成しました".into());
             map.insert("error".into(), "エラー".into());
             map.insert("loading".into(), "読み込み中...".into());
@@ -196,7 +199,7 @@ fn load_translations(lang: &Language) -> HashMap<String, String> {
             map.insert("agent_committer".into(), "기록관".into());
         }
     }
-    
+
     map
 }
 
@@ -209,7 +212,7 @@ pub fn init() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_language_from_code() {
         assert_eq!(Language::from_code("ja"), Some(Language::Japanese));
@@ -218,16 +221,16 @@ mod tests {
         assert_eq!(Language::from_code("ko"), Some(Language::Korean));
         assert_eq!(Language::from_code("unknown"), None);
     }
-    
+
     #[test]
     fn test_i18n_translation() {
         let ja = I18n::new("ja");
         assert_eq!(ja.t("welcome"), "ようこそ");
-        
+
         let en = I18n::new("en");
         assert_eq!(en.t("welcome"), "Welcome");
     }
-    
+
     #[test]
     fn test_i18n_format() {
         let ja = I18n::new("ja");

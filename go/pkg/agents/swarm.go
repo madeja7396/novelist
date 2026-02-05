@@ -2,6 +2,7 @@ package agents
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -16,7 +17,7 @@ type Swarm struct {
 	checker   *CheckerAgent
 	editor    *EditorAgent
 	committer *CommitterAgent
-	
+
 	maxRevision int
 }
 
@@ -35,28 +36,28 @@ func NewSwarm(configs map[string]AgentConfig) *Swarm {
 // GenerateScene runs the full pipeline
 func (s *Swarm) GenerateScene(ctx context.Context, req *models.SceneRequest) (*models.SceneResponse, error) {
 	start := time.Now()
-	
+
 	response := &models.SceneResponse{
 		RequestID: req.ID,
 		Timestamp: time.Now(),
 		Stages:    []models.StageInfo{},
 	}
-	
+
 	// Stage 1: Director
 	log.Info().Str("stage", "director").Msg("Starting scene design")
-	
+
 	directorResult, err := s.director.Execute(ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("director failed: %w", err)
 	}
-	
+
 	response.Stages = append(response.Stages, models.StageInfo{
 		Agent:      "director",
 		Operation:  "design_scene",
 		DurationMs: directorResult.DurationMs,
 		Tokens:     directorResult.PromptTokens + directorResult.CompletionTokens,
 	})
-	
+
 	// Parse SceneSpec
 	sceneSpec, err := parseSceneSpec(directorResult.Text)
 	if err != nil {
@@ -64,62 +65,62 @@ func (s *Swarm) GenerateScene(ctx context.Context, req *models.SceneRequest) (*m
 		sceneSpec = &models.SceneSpec{}
 	}
 	response.SceneSpec = sceneSpec
-	
+
 	// Stage 2: Writer
 	log.Info().Str("stage", "writer").Msg("Generating prose")
-	
+
 	writerInput := &WriterInput{
-		SceneSpec:   sceneSpec,
-		WordCount:   req.WordCount,
+		SceneSpec:    sceneSpec,
+		WordCount:    req.WordCount,
 		POVCharacter: req.POVCharacter,
 	}
-	
+
 	writerResult, err := s.writer.Execute(ctx, writerInput)
 	if err != nil {
 		return nil, fmt.Errorf("writer failed: %w", err)
 	}
-	
+
 	response.Stages = append(response.Stages, models.StageInfo{
 		Agent:      "writer",
 		Operation:  "generate_prose",
 		DurationMs: writerResult.DurationMs,
 		Tokens:     writerResult.PromptTokens + writerResult.CompletionTokens,
 	})
-	
+
 	text := writerResult.Text
-	
+
 	// Stage 3: Checker
 	log.Info().Str("stage", "checker").Msg("Validating content")
-	
+
 	checkerInput := &CheckerInput{
 		Text:         text,
 		Chapter:      req.Chapter,
 		Scene:        req.Scene,
 		POVCharacter: req.POVCharacter,
 	}
-	
+
 	issues, err := s.checker.Check(ctx, checkerInput)
 	if err != nil {
 		log.Warn().Err(err).Msg("Checker encountered error, continuing")
 	}
-	
+
 	response.Issues = issues
 	response.Stages = append(response.Stages, models.StageInfo{
 		Agent:     "checker",
 		Operation: "validate",
 	})
-	
+
 	// Stage 4: Editor (if issues found and maxRevision > 0)
 	if len(issues) > 0 {
 		log.Info().
 			Int("issues", len(issues)).
 			Msg("Issues found, running editor")
-		
+
 		editorInput := &EditorInput{
 			Text:   text,
 			Issues: issues,
 		}
-		
+
 		editorResult, err := s.editor.Execute(ctx, editorInput)
 		if err != nil {
 			log.Warn().Err(err).Msg("Editor failed, using original text")
@@ -133,12 +134,12 @@ func (s *Swarm) GenerateScene(ctx context.Context, req *models.SceneRequest) (*m
 			})
 		}
 	}
-	
+
 	response.Text = text
-	
+
 	// Stage 5: Committer (async)
 	log.Info().Str("stage", "committer").Msg("Updating memory")
-	
+
 	go func() {
 		committerInput := &CommitterInput{
 			Text:      text,
@@ -146,20 +147,20 @@ func (s *Swarm) GenerateScene(ctx context.Context, req *models.SceneRequest) (*m
 			Scene:     req.Scene,
 			SceneSpec: sceneSpec,
 		}
-		
+
 		if err := s.committer.Commit(context.Background(), committerInput); err != nil {
 			log.Error().Err(err).Msg("Committer failed")
 		}
 	}()
-	
+
 	response.TotalDurationMs = time.Since(start).Milliseconds()
-	
+
 	log.Info().
 		Int64("duration_ms", response.TotalDurationMs).
 		Int("issues", len(issues)).
 		Bool("revision", response.RevisionMade).
 		Msg("Scene generation complete")
-	
+
 	return response, nil
 }
 
@@ -169,11 +170,11 @@ func parseSceneSpec(text string) (*models.SceneSpec, error) {
 	if jsonStr == "" {
 		jsonStr = text
 	}
-	
+
 	var spec models.SceneSpec
 	if err := json.Unmarshal([]byte(jsonStr), &spec); err != nil {
 		return nil, err
 	}
-	
+
 	return &spec, nil
 }
