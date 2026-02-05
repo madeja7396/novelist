@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/novelist/novelist/go/pkg/models"
+	"github.com/novelist/novelist/pkg/models"
 )
 
 // CheckerInput represents input for checker
@@ -32,7 +32,7 @@ func NewCheckerAgent(config AgentConfig) *CheckerAgent {
 func (a *CheckerAgent) Check(ctx context.Context, input *CheckerInput) ([]models.Issue, error) {
 	systemPrompt := `あなたは小説の設定・矛盾チェッカーです。
 文章を客観的に分析し、問題点をJSON形式で出力してください。`
-	
+
 	userPrompt := fmt.Sprintf(`チェック対象の文章:
 %s
 
@@ -54,29 +54,29 @@ func (a *CheckerAgent) Check(ctx context.Context, input *CheckerInput) ([]models
 ]`,
 		input.Text[:min(len(input.Text), 2000)],
 	)
-	
+
 	params := GenerateParams{
 		Temperature: 0.2,
 		MaxTokens:   1000,
 	}
-	
+
 	result, err := a.Generate(ctx, systemPrompt, userPrompt, params)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Parse issues
 	var issues []models.Issue
 	jsonStr := extractJSON(result.Text)
 	if jsonStr == "" {
 		jsonStr = result.Text
 	}
-	
+
 	if err := json.Unmarshal([]byte(jsonStr), &issues); err != nil {
 		// No issues found or parse error
 		return []models.Issue{}, nil
 	}
-	
+
 	return issues, nil
 }
 

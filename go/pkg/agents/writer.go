@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/novelist/novelist/go/pkg/models"
+	"github.com/novelist/novelist/pkg/models"
 )
 
 // WriterInput represents input for writer
@@ -32,7 +32,7 @@ func (a *WriterAgent) Execute(ctx context.Context, input interface{}) (*models.G
 	if !ok {
 		return nil, fmt.Errorf("invalid input type")
 	}
-	
+
 	systemPrompt := `あなたはプロの小説家です。
 与えられた設計図に従って、小説の本文を書いてください。
 
@@ -43,20 +43,20 @@ func (a *WriterAgent) Execute(ctx context.Context, input interface{}) (*models.G
 - キャラクターの口調・禁則事項を遵守
 
 自然な小説の文章を出力してください。`
-	
+
 	userPrompt := a.buildPrompt(in)
-	
+
 	params := GenerateParams{
 		Temperature: 0.8,
 		MaxTokens:   in.WordCount * 2,
 	}
-	
+
 	return a.Generate(ctx, systemPrompt, userPrompt, params)
 }
 
 func (a *WriterAgent) buildPrompt(input *WriterInput) string {
 	ss := input.SceneSpec
-	
+
 	prompt := fmt.Sprintf(`## Scene Design
 目的: %s
 概要: %s
@@ -77,6 +77,6 @@ func (a *WriterAgent) buildPrompt(input *WriterInput) string {
 		input.POVCharacter,
 		input.WordCount,
 	)
-	
+
 	return prompt
 }

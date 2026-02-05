@@ -70,6 +70,8 @@ test_results/
 *.gguf
 *.bin
 models/
+!go/pkg/models/
+!go/pkg/models/**
 
 # Node modules (if using web UI)
 node_modules/

@@ -1,11 +1,11 @@
 //! FFI bindings for Go interop
-//! 
+//!
 //! Exposes Rust core functions to Go via C ABI
 
 use std::ffi::{CStr, CString};
 use std::os::raw::{c_char, c_int};
 
-use crate::rag::{Document, DocType, Retriever};
+use crate::rag::{DocType, Document, Retriever};
 use crate::tokenizer::MultiLanguageTokenizer;
 
 /// Tokenize text and return JSON array of tokens
@@ -14,19 +14,19 @@ pub extern "C" fn novelist_tokenize(text: *const c_char) -> *mut c_char {
     if text.is_null() {
         return std::ptr::null_mut();
     }
-    
+
     let c_str = unsafe { CStr::from_ptr(text) };
     let text_str = match c_str.to_str() {
         Ok(s) => s,
         Err(_) => return std::ptr::null_mut(),
     };
-    
+
     let tokenizer = MultiLanguageTokenizer::new();
     let tokens = tokenizer.tokenize(text_str);
-    
+
     // Convert to JSON
     let json = serde_json::to_string(&tokens).unwrap_or_default();
-    
+
     match CString::new(json) {
         Ok(cstring) => cstring.into_raw(),
         Err(_) => std::ptr::null_mut(),
@@ -72,9 +72,9 @@ pub extern "C" fn novelist_retriever_add(
     if retriever.is_null() || id.is_null() || content.is_null() {
         return;
     }
-    
+
     let retriever = unsafe { &*retriever };
-    
+
     let id_str = unsafe { CStr::from_ptr(id).to_string_lossy().into_owned() };
     let content_str = unsafe { CStr::from_ptr(content).to_string_lossy().into_owned() };
     let source_str = if source.is_null() {
@@ -82,7 +82,7 @@ pub extern "C" fn novelist_retriever_add(
     } else {
         unsafe { CStr::from_ptr(source).to_string_lossy().into_owned() }
     };
-    
+
     let doc_type_enum = if doc_type.is_null() {
         DocType::Other
     } else {
@@ -95,7 +95,7 @@ pub extern "C" fn novelist_retriever_add(
             _ => DocType::Other,
         }
     };
-    
+
     let doc = Document {
         id: id_str,
         content: content_str,
@@ -104,7 +104,7 @@ pub extern "C" fn novelist_retriever_add(
         metadata: std::collections::HashMap::new(),
         embedding: None,
     };
-    
+
     retriever.add_document(doc);
 }
 
@@ -127,10 +127,10 @@ pub extern "C" fn novelist_retriever_search(
     if retriever.is_null() || query.is_null() {
         return 0;
     }
-    
+
     let retriever = unsafe { &*retriever };
     let query_str = unsafe { CStr::from_ptr(query).to_string_lossy() };
-    
+
     let results = retriever.search(&query_str, top_k as usize);
     results.len() as c_int
 }

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/novelist/novelist/go/pkg/models"
+	"github.com/novelist/novelist/pkg/models"
 	"github.com/rs/zerolog/log"
 )
 
@@ -48,22 +48,22 @@ type GenerateParams struct {
 
 // ProviderCapabilities represents provider capabilities
 type ProviderCapabilities struct {
-	CtxLen              int  `json:"ctx_len"`
-	SupportsTools       bool `json:"supports_tools"`
-	SupportsJSONMode    bool `json:"supports_json_mode"`
-	SupportsThinking    bool `json:"supports_thinking_mode"`
-	SupportsStreaming   bool `json:"supports_streaming"`
+	CtxLen            int  `json:"ctx_len"`
+	SupportsTools     bool `json:"supports_tools"`
+	SupportsJSONMode  bool `json:"supports_json_mode"`
+	SupportsThinking  bool `json:"supports_thinking_mode"`
+	SupportsStreaming bool `json:"supports_streaming"`
 }
 
 // Generate executes generation with the provider
 func (a *BaseAgent) Generate(ctx context.Context, systemPrompt, userPrompt string, params GenerateParams) (*models.GenerationResult, error) {
 	start := time.Now()
-	
+
 	messages := []Message{
 		{Role: "system", Content: systemPrompt},
 		{Role: "user", Content: userPrompt},
 	}
-	
+
 	result, err := a.provider.Generate(ctx, messages, params)
 	if err != nil {
 		log.Error().
@@ -72,23 +72,23 @@ func (a *BaseAgent) Generate(ctx context.Context, systemPrompt, userPrompt strin
 			Msg("Generation failed")
 		return nil, fmt.Errorf("%s generation failed: %w", a.name, err)
 	}
-	
+
 	result.DurationMs = time.Since(start).Milliseconds()
-	
+
 	log.Debug().
 		Str("agent", a.name).
 		Int64("duration_ms", result.DurationMs).
 		Int("tokens", result.PromptTokens+result.CompletionTokens).
 		Msg("Generation complete")
-	
+
 	return result, nil
 }
 
 // AgentConfig represents agent configuration
 type AgentConfig struct {
-	Provider     Provider
-	Temperature  float64
-	MaxTokens    int
+	Provider    Provider
+	Temperature float64
+	MaxTokens   int
 }
 
 // NewBaseAgent creates a new base agent

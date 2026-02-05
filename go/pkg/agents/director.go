@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/novelist/novelist/go/pkg/models"
+	"github.com/novelist/novelist/pkg/models"
 )
 
 // DirectorAgent creates SceneSpec from user intention
@@ -26,21 +26,21 @@ func (a *DirectorAgent) Execute(ctx context.Context, input interface{}) (*models
 	if !ok {
 		return nil, fmt.Errorf("invalid input type")
 	}
-	
+
 	systemPrompt := a.systemPrompt()
 	userPrompt := a.buildPrompt(req)
-	
+
 	params := GenerateParams{
 		Temperature: 0.5,
 		MaxTokens:   2000,
 		JSONMode:    true,
 	}
-	
+
 	result, err := a.Generate(ctx, systemPrompt, userPrompt, params)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Validate JSON
 	var spec models.SceneSpec
 	if err := json.Unmarshal([]byte(result.Text), &spec); err != nil {
@@ -50,7 +50,7 @@ func (a *DirectorAgent) Execute(ctx context.Context, input interface{}) (*models
 			result.Text = extracted
 		}
 	}
-	
+
 	return result, nil
 }
 
@@ -131,7 +131,7 @@ func extractJSON(text string) string {
 	// Try to find JSON block
 	start := -1
 	end := -1
-	
+
 	for i, c := range text {
 		if c == '{' && start == -1 {
 			start = i
@@ -140,10 +140,10 @@ func extractJSON(text string) string {
 			end = i + 1
 		}
 	}
-	
+
 	if start != -1 && end != -1 && end > start {
 		return text[start:end]
 	}
-	
+
 	return ""
 }
