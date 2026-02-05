@@ -167,9 +167,9 @@ class TwoStagePipeline:
         print(f"[Pipeline] Saved to chapter {chapter}")
         
         if auto_commit:
-            self._update_memory(scene, text, scenespec)
+            self._update_memory(chapter, scene, text, scenespec)
     
-    def _update_memory(self, scene_num: int, text: str, scenespec: Dict):
+    def _update_memory(self, chapter: int, scene_num: int, text: str, scenespec: Dict):
         """Update episodic memory, facts, etc."""
         # Episodic summary
         summary = SimpleSummarizer.summarize(text)
@@ -178,7 +178,7 @@ class TwoStagePipeline:
         key_events = narrative.get("key_events", [])
         
         self.episodic.add_scene_summary(
-            chapter=1,  # TODO: dynamic chapter
+            chapter=chapter,
             scene=scene_num,
             summary=summary,
             key_events=key_events
@@ -186,10 +186,10 @@ class TwoStagePipeline:
         print(f"[Memory] Updated episodic memory")
         
         # Extract and add facts
-        chapter = f"chapter_{1:03d}"
-        extracted_facts = self.facts.extract_facts_from_text(text, chapter)
+        chapter_key = f"chapter_{chapter:03d}"
+        extracted_facts = self.facts.extract_facts_from_text(text, chapter_key)
         for fact_content in extracted_facts:
-            self.facts.add_fact(fact_content, chapter)
+            self.facts.add_fact(fact_content, chapter_key)
         if extracted_facts:
             print(f"[Memory] Added {len(extracted_facts)} facts")
         
@@ -199,7 +199,7 @@ class TwoStagePipeline:
         # Resolve foreshadowing
         to_resolve = continuity.get("foreshadowing_to_resolve", [])
         for fs_id in to_resolve:
-            self.foreshadowing.resolve_foreshadowing(fs_id, chapter)
+            self.foreshadowing.resolve_foreshadowing(fs_id, chapter_key)
         if to_resolve:
             print(f"[Memory] Resolved {len(to_resolve)} foreshadowing")
         
@@ -207,7 +207,7 @@ class TwoStagePipeline:
         to_plant = continuity.get("foreshadowing_to_plant", [])
         for fs_content in to_plant:
             if isinstance(fs_content, str):
-                self.foreshadowing.plant_foreshadowing(fs_content, chapter)
+                self.foreshadowing.plant_foreshadowing(fs_content, chapter_key)
         if to_plant:
             print(f"[Memory] Planted {len(to_plant)} new foreshadowing")
 
