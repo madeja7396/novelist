@@ -2,7 +2,6 @@ package agents
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/rs/zerolog/log"
 )
@@ -33,12 +32,12 @@ func (a *CommitterAgent) Commit(ctx context.Context, input *CommitterInput) erro
 		Int("chapter", input.Chapter).
 		Int("scene", input.Scene).
 		Msg("Committing scene to memory")
-	
+
 	// In real implementation, this would:
 	// 1. Update episodic memory
 	// 2. Extract and add facts
 	// 3. Update foreshadowing status
 	// 4. Save to chapter file
-	
+
 	return nil
 }

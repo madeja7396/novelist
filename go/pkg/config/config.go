@@ -1,6 +1,7 @@
 package config
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -64,7 +65,7 @@ func LoadProjectConfig(projectPath string) (*models.ProjectConfig, error) {
 	v := viper.New()
 	v.SetConfigType("yaml")
 
-	if err := v.ReadConfig(data); err != nil {
+	if err := v.ReadConfig(bytes.NewReader(data)); err != nil {
 		return nil, fmt.Errorf("failed to parse config: %w", err)
 	}
 
