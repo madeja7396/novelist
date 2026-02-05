@@ -14,19 +14,19 @@
         pkgs = import nixpkgs {
           inherit system overlays;
         };
-        
+
         # Rust toolchain
         rustToolchain = pkgs.rust-bin.stable.latest.default.override {
           extensions = [ "rust-src" "rust-analyzer" "clippy" "rustfmt" ];
-          targets = [ 
+          targets = [
             "x86_64-unknown-linux-gnu"
             "wasm32-unknown-unknown"
           ];
         };
-        
+
         # Go toolchain
-        goToolchain = pkgs.go_1_21;
-        
+        goToolchain = pkgs.go;
+
         # Python for legacy compatibility
         pythonEnv = pkgs.python312.withPackages (ps: with ps; [
           pydantic
@@ -34,7 +34,7 @@
           httpx
           numpy
         ]);
-        
+
         # System dependencies
         nativeBuildInputs = with pkgs; [
           # Rust
@@ -42,42 +42,42 @@
           cargo-watch
           cargo-audit
           cargo-tarpaulin
-          
+
           # Go
           goToolchain
           gopls
           golangci-lint
-          
+
           # Python (for hybrid)
           pythonEnv
-          
+
           # Build tools
           pkg-config
           cmake
           protobuf
-          
+
           # Nix tools
           nixpkgs-fmt
           nil
-          
+
           # Dev tools
           just
           jq
           fd
           ripgrep
         ];
-        
+
         buildInputs = with pkgs; [
           openssl
           sqlite
         ];
-        
+
       in
       {
         # Development shell
         devShells.default = pkgs.mkShell {
           inherit nativeBuildInputs buildInputs;
-          
+
           shellHook = ''
             echo "🚀 Novelist Development Environment"
             echo ""
@@ -92,18 +92,18 @@
             echo "  ./src/      - Python (legacy compatibility)"
             echo "  ./web/      - WebAssembly UI"
             echo ""
-            
+
             # Set up environment
             export RUST_BACKTRACE=1
             export RUST_LOG=debug
             export GOPATH="$PWD/.go"
             export PATH="$GOPATH/bin:$PATH"
-            
+
             # Create local directories
             mkdir -p .go/bin .go/pkg
           '';
         };
-        
+
         # Packages
         packages = {
           # Rust core library
@@ -113,29 +113,30 @@
             src = ./rust;
             cargoLock = {
               lockFile = ./rust/Cargo.lock;
+              allowBuiltinFetchGit = true;
             };
             nativeBuildInputs = nativeBuildInputs;
             buildInputs = buildInputs;
           };
-          
+
           # Go agent service
           novelist-agent = pkgs.buildGoModule {
             pname = "novelist-agent";
             version = "0.2.0";
             src = ./go;
-            vendorHash = null; # Use go.mod
+            vendorHash = null;
           };
-          
+
           # Full package
           default = pkgs.symlinkJoin {
             name = "novelist";
-            paths = [ 
+            paths = [
               self.packages.${system}.novelist-core
               self.packages.${system}.novelist-agent
             ];
           };
         };
-        
+
         # Apps
         apps = {
           novelist-core = {
@@ -148,7 +149,7 @@
           };
           default = self.apps.${system}.novelist-core;
         };
-        
+
         # Formatter
         formatter = pkgs.nixpkgs-fmt;
       });
