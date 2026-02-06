@@ -45,7 +45,7 @@
 
 ```bash
 # Clone
-git clone https://github.com/yourusername/novelist
+git clone https://github.com/madeja7396/novelist
 cd novelist
 
 # Enter dev shell (Rust + Go + all tools)
