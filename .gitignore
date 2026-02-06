@@ -75,3 +75,6 @@ models/
 
 # Node modules (if using web UI)
 node_modules/
+
+# Rust
+rust/target/

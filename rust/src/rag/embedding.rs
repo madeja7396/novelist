@@ -3,7 +3,6 @@
 //! Lightweight embeddings using TF-IDF or simple neural approaches
 
 use ndarray::Array1;
-use std::collections::HashMap;
 
 /// Embedding trait
 pub trait Embedding: Send + Sync {
@@ -15,84 +14,33 @@ pub trait Embedding: Send + Sync {
 /// Fast and lightweight, good for keyword matching
 pub struct SimpleEmbedder {
     dimension: usize,
-    vocab: HashMap<char, usize>,
-    idf: HashMap<char, f32>,
 }
 
 impl SimpleEmbedder {
     pub fn new(dimension: usize) -> Self {
-        let mut vocab = HashMap::new();
-
-        // Initialize with common characters
-        // ASCII
-        for c in 'a'..='z' {
-            vocab.insert(c, vocab.len());
-        }
-        for c in '0'..='9' {
-            vocab.insert(c, vocab.len());
-        }
-
-        // Hiragana
-        for c in '\u{3040}'..='\u{309F}' {
-            vocab.insert(c, vocab.len());
-        }
-
-        // Katakana
-        for c in '\u{30A0}'..='\u{30FF}' {
-            vocab.insert(c, vocab.len());
-        }
-
-        // Common Kanji (subset)
-        let common_kanji = "日一国会人年大十二本中長出三同時分上東生国会入見月白明書行気小".chars();
-        for c in common_kanji {
-            vocab.insert(c, vocab.len());
-        }
-
-        // Pad to dimension
-        while vocab.len() < dimension {
-            vocab.insert('\0', vocab.len());
-        }
-
-        // Simple IDF (can be improved with corpus analysis)
-        let mut idf = HashMap::new();
-        for (c, _) in &vocab {
-            // Lower IDF for common characters
-            let freq = match c {
-                ' ' | '。' | '、' | '.' | ',' => 1.0,
-                'の' | 'に' | 'は' | 'を' | 'が' | 'と' => 1.5,
-                'a' | 'e' | 'i' | 'o' | 'u' | 't' | 'n' => 1.5,
-                _ => 2.0,
-            };
-            idf.insert(*c, freq);
-        }
-
-        Self {
-            dimension,
-            vocab,
-            idf,
-        }
+        Self { dimension }
     }
 
     /// Embed text to vector
     pub fn embed(&self, text: &str) -> Array1<f32> {
-        let mut vector = Array1::zeros(self.dimension);
+        let mut vector: Array1<f32> = Array1::zeros(self.dimension);
 
-        // Character frequency
-        let mut char_counts: HashMap<char, usize> = HashMap::new();
+        // Single-pass weighted frequency with deterministic hashing.
+        // This avoids per-text hash map allocation on the hot path.
+        let mut total_chars = 0usize;
         for c in text.chars() {
-            *char_counts.entry(c).or_insert(0) += 1;
+            total_chars += 1;
+            let idx = (c as usize) % self.dimension;
+            let weight = match c {
+                ' ' | '。' | '、' | '.' | ',' => 0.8,
+                'の' | 'に' | 'は' | 'を' | 'が' | 'と' => 1.0,
+                _ => 1.6,
+            };
+            vector[idx] += weight;
         }
 
-        // TF-IDF weighting
-        let total_chars = text.chars().count().max(1);
-        for (c, count) in char_counts {
-            if let Some(&idx) = self.vocab.get(&c) {
-                if idx < self.dimension {
-                    let tf = count as f32 / total_chars as f32;
-                    let idf = self.idf.get(&c).copied().unwrap_or(1.0);
-                    vector[idx] = tf * idf;
-                }
-            }
+        if total_chars > 0 {
+            vector /= total_chars as f32;
         }
 
         // L2 normalize

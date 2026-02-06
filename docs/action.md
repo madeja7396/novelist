@@ -1,121 +1,34 @@
-# Github action結果
-## rust
-Current runner version: '2.331.0'
-Runner Image Provisioner
-Operating System
-Runner Image
-GITHUB_TOKEN Permissions
-Secret source: Actions
-Prepare workflow directory
-Prepare all required actions
-Getting action download info
-Error: Unable to resolve action dtolnay/rust-action, repository not foundS
+# 実装進捗サマリ（2026-02-06）
 
-## go
-Run cd go && go vet ./...
-Error: cmd/api/main.go:12:2: missing go.sum entry for module providing package github.com/gin-gonic/gin (imported by github.com/novelist/novelist/cmd/api); to add:
-	go get github.com/novelist/novelist/cmd/api
-Error: cmd/api/main.go:13:2: no required module provides package github.com/novelist/novelist/go/pkg/agents; to add it:
-	go get github.com/novelist/novelist/go/pkg/agents
-Error: cmd/api/main.go:14:2: no required module provides package github.com/novelist/novelist/go/pkg/api; to add it:
-	go get github.com/novelist/novelist/go/pkg/api
-Error: cmd/api/main.go:15:2: no required module provides package github.com/novelist/novelist/go/pkg/config; to add it:
-	go get github.com/novelist/novelist/go/pkg/config
-Error: cmd/api/main.go:16:2: missing go.sum entry for module providing package github.com/rs/zerolog (imported by github.com/novelist/novelist/cmd/api); to add:
-	go get github.com/novelist/novelist/cmd/api
-Error: pkg/agents/agent.go:8:2: no required module provides package github.com/novelist/novelist/go/pkg/models; to add it:
-	go get github.com/novelist/novelist/go/pkg/models
-Error: pkg/agents/agent.go:9:2: missing go.sum entry for module providing package github.com/rs/zerolog/log (imported by github.com/novelist/novelist/pkg/agents); to add:
-	go get github.com/novelist/novelist/pkg/agents
-Error: pkg/api/handlers.go:7:2: missing go.sum entry for module providing package github.com/google/uuid (imported by github.com/novelist/novelist/pkg/api); to add:
-	go get github.com/novelist/novelist/pkg/api
-Error: pkg/config/config.go:9:2: missing go.sum entry for module providing package github.com/spf13/viper (imported by github.com/novelist/novelist/pkg/config); to add:
-	go get github.com/novelist/novelist/pkg/config
-Error: Process completed with exit code 1.
+## 全体進捗（roadmap基準）
+- Phase 0: 6/7 完了（P0-07 Integration Test が pending）
+- Phase 1: 7/15 完了（P1-06,07,10,11,12,13,14,15 が pending）
+- Phase 2: 15/15 完了
+- 進捗根拠: `.agents/skills/project-roadmap/progress.json`
 
-## nix
-Run nix flake check
-unpacking 'github:numtide/flake-utils/11707dc2f618dd54ca8739b309ec4fc024de578b' into the Git cache...
-unpacking 'github:NixOS/nixpkgs/00c21e4c93d963c50d4c0c89bfa84ed6e0694df2' into the Git cache...
-unpacking 'github:oxalica/rust-overlay/42ec85352e419e601775c57256a52f6d48a39906' into the Git cache...
-warning: creating lock file "/home/runner/work/novelist/novelist/flake.lock": 
-• Added input 'flake-utils':
-    'github:numtide/flake-utils/11707dc' (2024-11-13)
-• Added input 'flake-utils/systems':
-    'github:nix-systems/default/da67096' (2023-04-09)
-• Added input 'nixpkgs':
-    'github:NixOS/nixpkgs/00c21e4' (2026-02-04)
-• Added input 'rust-overlay':
-    'github:oxalica/rust-overlay/42ec853' (2026-02-05)
-• Added input 'rust-overlay/nixpkgs':
-    'github:NixOS/nixpkgs/18dd725' (2025-04-13)
-evaluating flake...
-unpacking 'github:nix-systems/default/da67096a3b9bf56a91d16901293e51ba5b49a27e?narHash=sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768%3D' into the Git cache...
-checking flake output 'devShells'...
-checking flake output 'apps'...
-checking app 'apps.x86_64-linux.default'...
-checking flake output 'formatter'...
-checking derivation formatter.x86_64-linux...
-derivation evaluated to /nix/store/slzhg6w6nf9a9wmsav5jbscv30nsav83-nixpkgs-fmt-1.3.0.drv
-checking flake output 'packages'...
-checking derivation packages.x86_64-linux.default...
-checking derivation devShells.x86_64-linux.default...
-error (ignored): attribute 'go_1_21' missing
-error (ignored): Path 'rust/Cargo.lock' does not exist in Git repository "/home/runner/work/novelist/novelist".
-error:
-       … while checking flake output 'apps'
-         at «github:numtide/flake-utils/11707dc»/lib.nix:43:9:
-           42|       // {
-           43|         ${key} = (attrs.${key} or { }) // {
-             |         ^
-           44|           ${system} = ret.${key};
+## 今回の更新内容（ローカル実装）
+- Python 側の import 不整合を修正し、テストを全件通過状態へ復旧
+  - `tests`: 15 passed
+- Rust 側のビルド安定化
+  - `Cargo.lock` 再生成
+  - `reqwest` を `rustls` 固定に変更
+  - `clippy -D warnings` を通過
+- Rust 側の性能最適化
+  - RAG 検索: Top-K 部分選択、dot-product 最適化、型フィルタ検索の正確性修正
+  - Tokenizer 言語判定: 1パス化
+  - Embedding: 1パス加算でヒープ割当を削減
+  - FFI: unsafe 境界を明示し、ユニットテスト追加
 
-       … while checking the app definition 'apps.x86_64-linux.default'
-         at /home/runner/work/novelist/novelist/flake.nix:149:11:
-          148|           };
-          149|           default = self.apps.${system}.novelist-core;
-             |           ^
-          150|         };
+## ローカル検証結果（2026-02-06）
+- Python: `python -m pytest -q tests` -> 15 passed
+- Rust test: `cargo test --release --locked` -> 16 passed
+- Rust lint: `cargo clippy --all-targets --all-features -- -D warnings` -> pass
+- Rust bench:
+  - `rag_search_1000_top10`: 約 39-43 µs
+  - `rag_search_10000_top10`: 約 386-416 µs
+  - `rag_index_1000`: 約 2.8-3.3 ms
 
-       (stack trace truncated; use '--show-trace' to show the full, detailed trace)
-
-       error: Path 'rust/Cargo.lock' does not exist in Git repository "/home/runner/work/novelist/novelist".
-Error: Process completed with exit code 1.
-
-## python
-Run python tests/test_integration.py
-....
-----------------------------------------------------------------------
-Ran 4 tests in 0.016s
-
-OK
-Traceback (most recent call last):
-  File "/home/runner/work/novelist/novelist/tests/test_phase1.py", line 21, in <module>
-    from rag.retriever import SimpleRetriever
-  File "/home/runner/work/novelist/novelist/src/rag/retriever.py", line 10, in <module>
-    import numpy as np
-ModuleNotFoundError: No module named 'numpy'
-Error: Process completed with exit code 1.
-
-## quality
-Run nix run nixpkgs#nixpkgs-fmt -- --check .
-unpacking 'github:NixOS/nixpkgs/aa290c9891fa4ebe88f8889e59633d20cc06a5f2' into the Git cache...
-these 7 paths will be fetched (9.9 MiB download, 45.0 MiB unpacked):
-  /nix/store/j2kgllgds4w7na8zqv1msi0mpvpjxda8-gcc-15.2.0-lib
-  /nix/store/yjmjazfwljzajwq54xlr7vfz77spzr9y-gcc-15.2.0-libgcc
-  /nix/store/wb6rhpznjfczwlwx23zmdrrw74bayxw4-glibc-2.42-47
-  /nix/store/d0d9wqmw5saaynfvmszsda3dmh5q82z8-libidn2-2.3.8
-  /nix/store/pkphs076yz5ajnqczzj0588n6miph269-libunistring-1.4.1
-  /nix/store/bhjnv6na5lzrfnrnrij1npg0zfgjp0x2-nixpkgs-fmt-1.3.0
-  /nix/store/kbijm6lc9va8xann3cfyam0vczzmwkxj-xgcc-15.2.0-libgcc
-copying path '/nix/store/yjmjazfwljzajwq54xlr7vfz77spzr9y-gcc-15.2.0-libgcc' from 'https://cache.nixos.org'...
-copying path '/nix/store/kbijm6lc9va8xann3cfyam0vczzmwkxj-xgcc-15.2.0-libgcc' from 'https://cache.nixos.org'...
-copying path '/nix/store/pkphs076yz5ajnqczzj0588n6miph269-libunistring-1.4.1' from 'https://cache.nixos.org'...
-copying path '/nix/store/d0d9wqmw5saaynfvmszsda3dmh5q82z8-libidn2-2.3.8' from 'https://cache.nixos.org'...
-copying path '/nix/store/wb6rhpznjfczwlwx23zmdrrw74bayxw4-glibc-2.42-47' from 'https://cache.nixos.org'...
-copying path '/nix/store/j2kgllgds4w7na8zqv1msi0mpvpjxda8-gcc-15.2.0-lib' from 'https://cache.nixos.org'...
-copying path '/nix/store/bhjnv6na5lzrfnrnrij1npg0zfgjp0x2-nixpkgs-fmt-1.3.0' from 'https://cache.nixos.org'...
-./flake.nix
-1 / 1 would have been reformatted
-error: fail on changes
-Error: Process completed with exit code 1.
+## 残タスク（優先）
+1. Roadmap pending の Phase 0/1 タスク完了
+2. Go 側依存（`go.sum` / module import）の整備
+3. CI（GitHub Actions）の再有効化と green 化

@@ -252,11 +252,11 @@ class SimpleWriter:
         """
         # Load defaults if not provided
         if bible is None:
-            from ..parsers.bible_parser import BibleLoader
+            from parsers.bible_parser import BibleLoader
             bible = BibleLoader.load(self.project_path)
         
         if characters is None:
-            from ..parsers.character_loader import CharacterLoader
+            from parsers.character_loader import CharacterLoader
             characters = CharacterLoader.load_all(self.project_path)
         
         result = self.agent.generate(

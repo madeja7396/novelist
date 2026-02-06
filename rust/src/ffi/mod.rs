@@ -6,11 +6,14 @@ use std::ffi::{CStr, CString};
 use std::os::raw::{c_char, c_int};
 
 use crate::rag::{DocType, Document, Retriever};
-use crate::tokenizer::MultiLanguageTokenizer;
+use crate::tokenizer::{MultiLanguageTokenizer, Tokenizer};
 
 /// Tokenize text and return JSON array of tokens
+///
+/// # Safety
+/// `text` must be a valid, non-null, NUL-terminated C string pointer.
 #[no_mangle]
-pub extern "C" fn novelist_tokenize(text: *const c_char) -> *mut c_char {
+pub unsafe extern "C" fn novelist_tokenize(text: *const c_char) -> *mut c_char {
     if text.is_null() {
         return std::ptr::null_mut();
     }
@@ -34,8 +37,11 @@ pub extern "C" fn novelist_tokenize(text: *const c_char) -> *mut c_char {
 }
 
 /// Free a string allocated by Rust
+///
+/// # Safety
+/// `s` must be a pointer returned by `novelist_tokenize` and must not be freed twice.
 #[no_mangle]
-pub extern "C" fn novelist_free_string(s: *mut c_char) {
+pub unsafe extern "C" fn novelist_free_string(s: *mut c_char) {
     if !s.is_null() {
         unsafe {
             let _ = CString::from_raw(s);
@@ -51,8 +57,11 @@ pub extern "C" fn novelist_retriever_new(dimension: c_int) -> *mut Retriever {
 }
 
 /// Free a retriever
+///
+/// # Safety
+/// `retriever` must be a pointer returned by `novelist_retriever_new` and must not be freed twice.
 #[no_mangle]
-pub extern "C" fn novelist_retriever_free(retriever: *mut Retriever) {
+pub unsafe extern "C" fn novelist_retriever_free(retriever: *mut Retriever) {
     if !retriever.is_null() {
         unsafe {
             let _ = Box::from_raw(retriever);
@@ -61,8 +70,13 @@ pub extern "C" fn novelist_retriever_free(retriever: *mut Retriever) {
 }
 
 /// Add document to retriever
+///
+/// # Safety
+/// `retriever` must be a valid pointer from `novelist_retriever_new`.
+/// `id` and `content` must be valid, non-null, NUL-terminated C strings.
+/// `source` and `doc_type` may be null; if non-null they must be valid C strings.
 #[no_mangle]
-pub extern "C" fn novelist_retriever_add(
+pub unsafe extern "C" fn novelist_retriever_add(
     retriever: *mut Retriever,
     id: *const c_char,
     content: *const c_char,
@@ -109,8 +123,11 @@ pub extern "C" fn novelist_retriever_add(
 }
 
 /// Build retriever index
+///
+/// # Safety
+/// `retriever` must be a valid pointer from `novelist_retriever_new`.
 #[no_mangle]
-pub extern "C" fn novelist_retriever_build(retriever: *mut Retriever) {
+pub unsafe extern "C" fn novelist_retriever_build(retriever: *mut Retriever) {
     if !retriever.is_null() {
         let retriever = unsafe { &*retriever };
         retriever.build();
@@ -118,8 +135,12 @@ pub extern "C" fn novelist_retriever_build(retriever: *mut Retriever) {
 }
 
 /// Search retriever (simplified - returns count)
+///
+/// # Safety
+/// `retriever` must be a valid pointer from `novelist_retriever_new`.
+/// `query` must be a valid, non-null, NUL-terminated C string pointer.
 #[no_mangle]
-pub extern "C" fn novelist_retriever_search(
+pub unsafe extern "C" fn novelist_retriever_search(
     retriever: *mut Retriever,
     query: *const c_char,
     top_k: c_int,
@@ -140,4 +161,51 @@ pub extern "C" fn novelist_retriever_search(
 pub extern "C" fn novelist_version() -> *const c_char {
     static VERSION: &str = concat!(env!("CARGO_PKG_VERSION"), "\0");
     VERSION.as_ptr() as *const c_char
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_ffi_tokenize_and_free() {
+        let input = CString::new("Hello world").expect("valid c string");
+        let out_ptr = unsafe { novelist_tokenize(input.as_ptr()) };
+        assert!(!out_ptr.is_null());
+
+        let out = unsafe { CStr::from_ptr(out_ptr) }
+            .to_string_lossy()
+            .into_owned();
+        assert!(out.contains("Hello"));
+
+        unsafe { novelist_free_string(out_ptr) };
+    }
+
+    #[test]
+    fn test_ffi_retriever_lifecycle() {
+        let retriever = novelist_retriever_new(64);
+        assert!(!retriever.is_null());
+
+        let id = CString::new("doc1").expect("valid c string");
+        let content = CString::new("magic comes from old ruins").expect("valid c string");
+        let source = CString::new("test.md").expect("valid c string");
+        let doc_type = CString::new("chapter").expect("valid c string");
+
+        unsafe {
+            novelist_retriever_add(
+                retriever,
+                id.as_ptr(),
+                content.as_ptr(),
+                source.as_ptr(),
+                doc_type.as_ptr(),
+            );
+            novelist_retriever_build(retriever);
+        }
+
+        let query = CString::new("magic").expect("valid c string");
+        let count = unsafe { novelist_retriever_search(retriever, query.as_ptr(), 5) };
+        assert!(count >= 1);
+
+        unsafe { novelist_retriever_free(retriever) };
+    }
 }

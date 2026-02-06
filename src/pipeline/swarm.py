@@ -145,8 +145,8 @@ class SwarmPipeline:
         # Stage 2: Writer
         print("[Swarm] Stage 2: Writer generating prose...")
         
-        from ..parsers.bible_parser import BibleLoader
-        from ..parsers.character_loader import CharacterLoader
+        from parsers.bible_parser import BibleLoader
+        from parsers.character_loader import CharacterLoader
         
         bible = BibleLoader.load(self.project_path)
         characters = CharacterLoader.load_all(self.project_path)

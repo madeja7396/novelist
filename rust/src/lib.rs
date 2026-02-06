@@ -13,7 +13,6 @@ pub mod rag;
 pub mod tokenizer;
 
 pub use i18n::I18n;
-pub use models::*;
 pub use rag::{Document, Retriever, SearchResult};
 pub use tokenizer::{Token, Tokenizer};
 

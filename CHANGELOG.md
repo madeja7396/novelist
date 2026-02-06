@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Added
+- Rust FFI safety documentation and unit tests for tokenizer/retriever lifecycle.
+- RAG benchmarks split by corpus scale (`1k` / `10k`) for clearer performance tracking.
+- Development ignore rule for `rust/target/`.
+
+### Changed
+- Rust `Retriever::search` optimized with top-k partial selection and direct dot-product scoring.
+- Rust `Retriever::search_by_type` now ranks within the requested document type subset.
+- Rust tokenizer language detection refactored to single-pass scanning.
+- Rust embedding generation refactored to single-pass accumulation (reduced allocation overhead).
+- Rust HTTP stack fixed to `reqwest` + `rustls` (`default-features = false`) to avoid OpenSSL coupling.
+
+### Fixed
+- Python relative-import issues in `director` / `writer` / `pipeline` modules.
+- Python memory update path now preserves chapter-linked facts even when extraction returns empty.
+- Rust build failures from invalid lockfile/checksum state by regenerating `rust/Cargo.lock`.
+
 ## [2.0.0] - 2024-02-06
 
 ### Added

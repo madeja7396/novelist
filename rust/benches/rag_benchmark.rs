@@ -31,16 +31,25 @@ fn benchmark_rag_index(c: &mut Criterion) {
 }
 
 fn benchmark_rag_search(c: &mut Criterion) {
-    let retriever = Retriever::new(128);
-    let docs = create_test_documents(1000);
-    retriever.add_documents(docs);
-    retriever.build();
-
     let query = "magic fantasy world";
 
-    c.bench_function("rag_search", |b| {
+    let retriever_1k = Retriever::new(128);
+    retriever_1k.add_documents(create_test_documents(1000));
+    retriever_1k.build();
+
+    c.bench_function("rag_search_1000_top10", |b| {
         b.iter(|| {
-            let _ = retriever.search(black_box(query), 10);
+            let _ = retriever_1k.search(black_box(query), 10);
+        });
+    });
+
+    let retriever_10k = Retriever::new(128);
+    retriever_10k.add_documents(create_test_documents(10_000));
+    retriever_10k.build();
+
+    c.bench_function("rag_search_10000_top10", |b| {
+        b.iter(|| {
+            let _ = retriever_10k.search(black_box(query), 10);
         });
     });
 }

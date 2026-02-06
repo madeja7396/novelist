@@ -53,7 +53,7 @@ class DirectorAgent:
         if session and session.rag_builder:
             self.rag = session.rag_builder
         else:
-            from ..rag.retriever import SimpleRetriever
+            from rag.retriever import SimpleRetriever
             retriever = SimpleRetriever(project_path)
             retriever.index_project()
             self.rag = RAGContextBuilder(retriever)

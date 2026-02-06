@@ -1,6 +1,5 @@
 //! Multi-language tokenizer with optimized performance
 
-use unicode_normalization::UnicodeNormalization;
 use unicode_segmentation::UnicodeSegmentation;
 
 pub mod japanese;
@@ -55,18 +54,30 @@ impl MultiLanguageTokenizer {
 
     /// Detect language from text
     pub fn detect_language(text: &str) -> Language {
-        let ja_ratio = text.chars().filter(|c| is_japanese(*c)).count();
-        let zh_ratio = text.chars().filter(|c| is_chinese(*c)).count();
-        let ko_ratio = text.chars().filter(|c| is_korean(*c)).count();
+        let mut ja_ratio = 0usize;
+        let mut zh_ratio = 0usize;
+        let mut ko_ratio = 0usize;
+        let mut total = 0usize;
 
-        let total = text.chars().count().max(1);
+        for c in text.chars() {
+            total += 1;
+            if is_korean(c) {
+                ko_ratio += 1;
+            } else if is_japanese_kana(c) {
+                ja_ratio += 1;
+            } else if is_chinese(c) {
+                zh_ratio += 1;
+            }
+        }
 
-        if ja_ratio * 3 > total {
+        let total = total.max(1);
+
+        if ko_ratio * 3 > total {
+            Language::Korean
+        } else if ja_ratio > 0 {
             Language::Japanese
         } else if zh_ratio * 3 > total {
             Language::Chinese
-        } else if ko_ratio * 3 > total {
-            Language::Korean
         } else {
             Language::English
         }
@@ -87,7 +98,7 @@ impl MultiLanguageTokenizer {
         let mut tokens = Vec::new();
         let mut start = 0;
 
-        for (word, _) in text.split_word_bounds().with_byte_offsets() {
+        for word in text.split_word_bounds() {
             let end = start + word.len();
 
             let token_type = if word.trim().is_empty() {
@@ -155,11 +166,9 @@ impl Tokenizer for MultiLanguageTokenizer {
 }
 
 // Language detection helpers
-fn is_japanese(c: char) -> bool {
+fn is_japanese_kana(c: char) -> bool {
     matches!(c as u32,
-        0x3040..=0x309F | // Hiragana
-        0x30A0..=0x30FF | // Katakana
-        0x4E00..=0x9FFF   // Kanji
+        0x3040..=0x30FF // Hiragana + Katakana
     )
 }
 
@@ -167,7 +176,7 @@ fn is_chinese(c: char) -> bool {
     matches!(c as u32,
         0x4E00..=0x9FFF | // CJK Unified
         0x3400..=0x4DBF   // CJK Extension A
-    ) && !is_japanese(c)
+    ) && !is_japanese_kana(c)
 }
 
 fn is_korean(c: char) -> bool {

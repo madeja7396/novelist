@@ -1,5 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
 use novelist_core::tokenizer::MultiLanguageTokenizer;
+use novelist_core::Tokenizer;
 
 fn benchmark_tokenize_japanese(c: &mut Criterion) {
     let tokenizer = MultiLanguageTokenizer::new();

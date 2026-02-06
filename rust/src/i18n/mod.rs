@@ -7,7 +7,6 @@
 //! - Korean (ko)
 
 use std::collections::HashMap;
-use std::sync::OnceLock;
 
 /// Supported languages
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -66,11 +65,11 @@ impl I18n {
     }
 
     /// Get translation
-    pub fn t(&self, key: &str) -> &str {
+    pub fn t(&self, key: &str) -> String {
         self.translations
             .get(key)
-            .map(|s| s.as_str())
-            .unwrap_or(key)
+            .cloned()
+            .unwrap_or_else(|| key.to_string())
     }
 
     /// Get current language
@@ -81,7 +80,7 @@ impl I18n {
     /// Format with arguments
     pub fn tf(&self, key: &str, args: &[&str]) -> String {
         let template = self.t(key);
-        let mut result = template.to_string();
+        let mut result = template;
 
         for (i, arg) in args.iter().enumerate() {
             let placeholder = format!("{{{}}}", i);

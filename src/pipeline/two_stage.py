@@ -96,8 +96,8 @@ class TwoStagePipeline:
         # Convert SceneSpec to description for writer
         scene_description = self._scenespec_to_description(scenespec)
         
-        from ..parsers.bible_parser import BibleLoader
-        from ..parsers.character_loader import CharacterLoader
+        from parsers.bible_parser import BibleLoader
+        from parsers.character_loader import CharacterLoader
         
         bible = BibleLoader.load(self.project_path)
         characters = CharacterLoader.load_all(self.project_path)
@@ -188,6 +188,13 @@ class TwoStagePipeline:
         # Extract and add facts
         chapter_key = f"chapter_{chapter:03d}"
         extracted_facts = self.facts.extract_facts_from_text(text, chapter_key)
+        # Fallback: when extraction yields nothing, preserve key events as facts
+        # so chapter-linked memory can still be tracked deterministically.
+        if not extracted_facts:
+            extracted_facts = [
+                event.strip() for event in key_events
+                if isinstance(event, str) and event.strip()
+            ]
         for fact_content in extracted_facts:
             self.facts.add_fact(fact_content, chapter_key)
         if extracted_facts:

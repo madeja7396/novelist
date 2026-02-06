@@ -1,17 +1,13 @@
-//! Japanese tokenizer using Lindera (MeCab-based)
+//! Japanese tokenizer implementation.
 
 use super::{Token, TokenType, Tokenizer};
-use lindera::tokenizer::Tokenizer as LinderaTokenizer;
 
-/// Japanese tokenizer with Lindera (fallbacks to character tokenization).
-pub struct JapaneseTokenizer {
-    inner: Option<LinderaTokenizer>,
-}
+/// Japanese tokenizer (character-level fallback implementation).
+pub struct JapaneseTokenizer;
 
 impl JapaneseTokenizer {
     pub fn new() -> Self {
-        let inner = LinderaTokenizer::new().ok();
-        Self { inner }
+        Self
     }
 }
 
@@ -24,30 +20,6 @@ impl Default for JapaneseTokenizer {
 impl Tokenizer for JapaneseTokenizer {
     fn tokenize(&self, text: &str) -> Vec<Token> {
         let mut tokens = Vec::new();
-
-        if let Some(inner) = &self.inner {
-            let results = inner.tokenize(text).unwrap_or_default();
-            let mut byte_offset = 0;
-
-            for token in results {
-                let surface = token.text;
-                let start = byte_offset;
-                let end = start + surface.len();
-
-                let token_type = classify_surface(&surface);
-
-                tokens.push(Token {
-                    text: surface.to_string(),
-                    start,
-                    end,
-                    token_type,
-                });
-
-                byte_offset = end;
-            }
-
-            return tokens;
-        }
 
         for (start, end, surface) in fallback_segments(text) {
             let token_type = classify_surface(surface);

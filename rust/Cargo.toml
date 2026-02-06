@@ -27,15 +27,13 @@ arc-swap = "1.6"
 
 # NLP / Tokenization
 unicode-segmentation = "1.11.0"
-unicode-normalization = "0.1"
-lindera = "0.27"  # Japanese tokenizer
 
 # Vector operations (RAG)
 ndarray = { version = "0.15", features = ["rayon", "serde"] }
 nalgebra = { version = "0.32", features = ["serde-serialize"] }
 
 # HTTP client
-reqwest = { version = "0.11", features = ["json", "stream", "rustls-tls"] }
+reqwest = { version = "0.11", default-features = false, features = ["json", "stream", "rustls-tls"] }
 
 # WebAssembly (optional)
 wasm-bindgen = { version = "0.2", optional = true }

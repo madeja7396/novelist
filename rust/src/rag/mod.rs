@@ -79,6 +79,10 @@ impl Retriever {
 
     /// Add multiple documents (parallel)
     pub fn add_documents(&self, docs: Vec<Document>) {
+        if docs.is_empty() {
+            return;
+        }
+
         // Generate embeddings in parallel
         let docs_with_embeddings: Vec<_> = docs
             .into_par_iter()
@@ -90,8 +94,26 @@ impl Retriever {
             .collect();
 
         let mut docs_lock = self.documents.write();
+        let was_empty = docs_lock.is_empty();
         docs_lock.extend(docs_with_embeddings);
-        *self.embeddings.write() = None;
+
+        if was_empty {
+            // Fast path: when index was empty, materialize embedding matrix now.
+            let n_docs = docs_lock.len();
+            let mut data = Vec::with_capacity(n_docs * self.dimension);
+            for doc in docs_lock.iter() {
+                if let Some(emb) = &doc.embedding {
+                    data.extend(emb.iter().copied());
+                } else {
+                    data.extend(std::iter::repeat_n(0.0f32, self.dimension));
+                }
+            }
+
+            let matrix = Array2::from_shape_vec((n_docs, self.dimension), data).ok();
+            *self.embeddings.write() = matrix;
+        } else {
+            *self.embeddings.write() = None;
+        }
     }
 
     /// Build index (create embeddings matrix)
@@ -100,6 +122,12 @@ impl Retriever {
 
         if docs.is_empty() {
             return;
+        }
+
+        if let Some(existing) = self.embeddings.read().as_ref() {
+            if existing.nrows() == docs.len() && existing.ncols() == self.dimension {
+                return;
+            }
         }
 
         // Build embeddings matrix
@@ -117,6 +145,10 @@ impl Retriever {
 
     /// Search with cosine similarity
     pub fn search(&self, query: &str, top_k: usize) -> Vec<SearchResult> {
+        if top_k == 0 {
+            return Vec::new();
+        }
+
         let query_emb = self.embedder.embed(query);
 
         let docs = self.documents.read();
@@ -126,33 +158,41 @@ impl Retriever {
             return Vec::new();
         }
 
-        // Use pre-built matrix if available
-        let similarities: Vec<f32> = if let Some(embeddings) = embeddings_lock.as_ref() {
-            // Batch similarity computation
-            embeddings
-                .outer_iter()
-                .map(|doc_emb| cosine_similarity(query_emb.view(), doc_emb))
+        // For small corpora, sequential iteration avoids parallel scheduling overhead.
+        let use_parallel = docs.len() >= 2048;
+
+        // Compute (index, similarity) directly to avoid intermediate allocations.
+        let mut results: Vec<(usize, f32)> = if let Some(embeddings) = embeddings_lock.as_ref() {
+            // Embeddings are L2-normalized; cosine similarity is dot product.
+            let sims = embeddings.dot(&query_emb);
+            sims.iter().enumerate().map(|(idx, score)| (idx, *score)).collect()
+        } else if use_parallel {
+            docs.par_iter()
+                .enumerate()
+                .map(|(idx, doc)| {
+                    let score = doc
+                        .embedding
+                        .as_ref()
+                        .map(|emb| query_emb.dot(emb))
+                        .unwrap_or(0.0);
+                    (idx, score)
+                })
                 .collect()
         } else {
-            // Compute on-the-fly
             docs.iter()
-                .map(|doc| {
-                    doc.embedding
+                .enumerate()
+                .map(|(idx, doc)| {
+                    let score = doc
+                        .embedding
                         .as_ref()
-                        .map(|emb| cosine_similarity(query_emb.view(), emb.view()))
-                        .unwrap_or(0.0)
+                        .map(|emb| query_emb.dot(emb))
+                        .unwrap_or(0.0);
+                    (idx, score)
                 })
                 .collect()
         };
 
-        // Create results with indices
-        let mut results: Vec<(usize, f32)> = similarities.into_iter().enumerate().collect();
-
-        // Sort by similarity (descending)
-        results.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-
-        // Take top_k
-        results.truncate(top_k);
+        select_top_k(&mut results, top_k);
 
         // Convert to SearchResult
         results
@@ -173,16 +213,49 @@ impl Retriever {
         doc_type: DocType,
         top_k: usize,
     ) -> Vec<SearchResult> {
-        let results = self.search(query, top_k * 2); // Get more, then filter
+        if top_k == 0 {
+            return Vec::new();
+        }
+
+        let query_emb = self.embedder.embed(query);
+        let docs = self.documents.read();
+        let embeddings_lock = self.embeddings.read();
+
+        if docs.is_empty() {
+            return Vec::new();
+        }
+
+        // Keep only requested doc_type, then rank globally inside that subset.
+        let mut results: Vec<(usize, f32)> = if let Some(embeddings) = embeddings_lock.as_ref() {
+            docs.iter()
+                .enumerate()
+                .filter(|(_, doc)| doc.doc_type == doc_type)
+                .map(|(idx, _)| (idx, embeddings.row(idx).dot(&query_emb)))
+                .collect()
+        } else {
+            docs.iter()
+                .enumerate()
+                .filter(|(_, doc)| doc.doc_type == doc_type)
+                .map(|(idx, doc)| {
+                    let score = doc
+                        .embedding
+                        .as_ref()
+                        .map(|emb| query_emb.dot(emb))
+                        .unwrap_or(0.0);
+                    (idx, score)
+                })
+                .collect()
+        };
+
+        select_top_k(&mut results, top_k);
 
         results
             .into_iter()
-            .filter(|r| r.doc.doc_type == doc_type)
-            .take(top_k)
             .enumerate()
-            .map(|(rank, mut r)| {
-                r.rank = rank + 1;
-                r
+            .map(|(rank, (idx, score))| SearchResult {
+                doc: docs[idx].clone(),
+                score,
+                rank: rank + 1,
             })
             .collect()
     }
@@ -214,6 +287,24 @@ pub fn cosine_similarity(a: ArrayView1<f32>, b: ArrayView1<f32>) -> f32 {
         0.0
     } else {
         dot / (norm_a * norm_b)
+    }
+}
+
+#[inline]
+fn select_top_k(results: &mut Vec<(usize, f32)>, top_k: usize) {
+    let k = top_k.min(results.len());
+    if k == 0 {
+        results.clear();
+        return;
+    }
+
+    if k < results.len() {
+        // Partition around top-k boundary, then sort only the selected prefix.
+        results.select_nth_unstable_by(k - 1, |a, b| b.1.total_cmp(&a.1));
+        results[..k].sort_unstable_by(|a, b| b.1.total_cmp(&a.1));
+        results.truncate(k);
+    } else {
+        results.sort_unstable_by(|a, b| b.1.total_cmp(&a.1));
     }
 }
 
@@ -261,5 +352,80 @@ mod tests {
 
         let c = Array1::from(vec![0.0, 1.0, 0.0]);
         assert!(cosine_similarity(a.view(), c.view()).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_search_top_k_and_order() {
+        let retriever = Retriever::new(128);
+        for i in 0..20 {
+            retriever.add_document(Document {
+                id: i.to_string(),
+                content: format!("magic world {}", i),
+                source: "bench.md".to_string(),
+                doc_type: DocType::Chapter,
+                metadata: HashMap::new(),
+                embedding: None,
+            });
+        }
+        retriever.build();
+
+        let results = retriever.search("magic", 5);
+        assert_eq!(results.len(), 5);
+        assert!(results.windows(2).all(|w| w[0].score >= w[1].score));
+        assert_eq!(results[0].rank, 1);
+        assert_eq!(results[4].rank, 5);
+    }
+
+    #[test]
+    fn test_search_top_k_zero() {
+        let retriever = Retriever::new(128);
+        retriever.add_document(Document {
+            id: "1".to_string(),
+            content: "magic".to_string(),
+            source: "test.md".to_string(),
+            doc_type: DocType::Chapter,
+            metadata: HashMap::new(),
+            embedding: None,
+        });
+        retriever.build();
+
+        let results = retriever.search("magic", 0);
+        assert!(results.is_empty());
+    }
+
+    #[test]
+    fn test_search_by_type_ranks_within_subset() {
+        let retriever = Retriever::new(128);
+
+        // High-scoring chapter docs
+        for i in 0..8 {
+            retriever.add_document(Document {
+                id: format!("c{}", i),
+                content: format!("magic battle {}", i),
+                source: "chapters".to_string(),
+                doc_type: DocType::Chapter,
+                metadata: HashMap::new(),
+                embedding: None,
+            });
+        }
+
+        // Lower-scoring fact docs
+        for i in 0..4 {
+            retriever.add_document(Document {
+                id: format!("f{}", i),
+                content: format!("history archive {}", i),
+                source: "facts".to_string(),
+                doc_type: DocType::Fact,
+                metadata: HashMap::new(),
+                embedding: None,
+            });
+        }
+
+        retriever.build();
+
+        let facts = retriever.search_by_type("magic", DocType::Fact, 3);
+        assert_eq!(facts.len(), 3);
+        assert!(facts.iter().all(|r| r.doc.doc_type == DocType::Fact));
+        assert!(facts.windows(2).all(|w| w[0].score >= w[1].score));
     }
 }
