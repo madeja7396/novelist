@@ -1,0 +1,39 @@
+services:
+  api:
+    image: novelist-local:latest
+    command: ["api"]
+    ports:
+      - "8080:8080"
+    environment:
+      NOVELIST_HTTP_PORT: "8080"
+      NOVELIST_PROJECT: "/data/project"
+      NOVELIST_MAX_REQUEST_BYTES: "${NOVELIST_MAX_REQUEST_BYTES:-65536}"
+      NOVELIST_REQUEST_TIMEOUT_SEC: "${NOVELIST_REQUEST_TIMEOUT_SEC:-90}"
+      NOVELIST_MAX_CONCURRENT_REQUESTS: "${NOVELIST_MAX_CONCURRENT_REQUESTS:-8}"
+      NOVELIST_RATE_LIMIT_PER_MIN: "${NOVELIST_RATE_LIMIT_PER_MIN:-120}"
+    volumes:
+      - ./data:/data
+    depends_on:
+      - ollama
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/v1/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ./data/ollama:/root/.ollama
+    restart: unless-stopped
+
+  web:
+    image: nginx:alpine
+    ports:
+      - "8081:80"
+    volumes:
+      - ./web:/usr/share/nginx/html:ro
+    depends_on:
+      - api
+    restart: unless-stopped

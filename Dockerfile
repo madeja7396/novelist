@@ -1,7 +1,7 @@
 # Multi-stage build for Novelist
 
 # Stage 1: Rust builder
-FROM rust:1.75-slim AS rust-builder
+FROM rust:1.85-slim AS rust-builder
 
 WORKDIR /build
 RUN apt-get update && apt-get install -y \
@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
 
 COPY rust/Cargo.toml rust/Cargo.lock ./
 COPY rust/src ./src
+COPY rust/benches ./benches
 RUN cargo build --release
 
 # Stage 2: Go builder
@@ -25,6 +26,7 @@ RUN go mod download
 
 COPY go/ ./
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o novelist-api ./cmd/api
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o novelist-agent ./cmd/agent
 
 # Stage 3: Python (legacy) - optional
 FROM python:3.12-slim AS python-base
@@ -49,6 +51,7 @@ WORKDIR /app
 # Copy binaries
 COPY --from=rust-builder /build/target/release/libnovelist_core.so /usr/lib/
 COPY --from=go-builder /build/novelist-api /usr/local/bin/
+COPY --from=go-builder /build/novelist-agent /usr/local/bin/
 COPY --from=python-base /app /app/python
 
 # Copy entrypoint

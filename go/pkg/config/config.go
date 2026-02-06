@@ -34,6 +34,15 @@ func Load(configPath string) (*Config, error) {
 	v.SetDefault("server.host", "0.0.0.0")
 
 	// Read from file if provided
+	if configPath == "" {
+		if projectPath := os.Getenv("NOVELIST_PROJECT"); projectPath != "" {
+			candidate := filepath.Join(projectPath, "config.yaml")
+			if _, err := os.Stat(candidate); err == nil {
+				configPath = candidate
+			}
+		}
+	}
+
 	if configPath != "" {
 		v.SetConfigFile(configPath)
 		if err := v.ReadInConfig(); err != nil {

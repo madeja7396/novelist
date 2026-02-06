@@ -5,6 +5,7 @@ Reference: docs/keikaku.md Section 4.1 - Provider Abstraction Layer
 """
 
 from abc import ABC, abstractmethod
+import importlib
 from typing import Any, Dict, Iterator, List, Optional, Union
 
 
@@ -127,11 +128,24 @@ class ProviderFactory:
     """Factory for creating provider instances."""
     
     _providers: Dict[str, type] = {}
+    _builtin_modules: Dict[str, str] = {
+        "ollama": "pal.ollama_provider",
+        "openai": "pal.openai_provider",
+        "anthropic": "pal.anthropic_provider",
+    }
     
     @classmethod
     def register(cls, name: str, provider_class: type):
         """Register a provider class."""
-        cls._providers[name] = provider_class
+        cls._providers[name.lower()] = provider_class
+
+    @classmethod
+    def _autoload_provider(cls, provider_type: str):
+        """Lazily import built-in providers if they are not registered yet."""
+        module = cls._builtin_modules.get(provider_type.lower())
+        if not module:
+            return
+        importlib.import_module(module)
     
     @classmethod
     def create(cls, provider_type: str, config: Dict[str, Any]) -> BaseProvider:
@@ -148,10 +162,15 @@ class ProviderFactory:
         Raises:
             ValueError: If provider type is unknown.
         """
-        if provider_type not in cls._providers:
+        provider_key = provider_type.lower()
+
+        if provider_key not in cls._providers:
+            cls._autoload_provider(provider_key)
+
+        if provider_key not in cls._providers:
             raise ValueError(f"Unknown provider type: {provider_type}")
         
-        return cls._providers[provider_type](config)
+        return cls._providers[provider_key](config)
     
     @classmethod
     def list_providers(cls) -> List[str]:

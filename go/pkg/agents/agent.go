@@ -30,6 +30,8 @@ func (a *BaseAgent) Name() string {
 type Provider interface {
 	Generate(ctx context.Context, messages []Message, params GenerateParams) (*models.GenerationResult, error)
 	Capabilities() ProviderCapabilities
+	HealthCheck(ctx context.Context) error
+	Name() string
 }
 
 // Message represents a chat message
@@ -82,6 +84,22 @@ func (a *BaseAgent) Generate(ctx context.Context, systemPrompt, userPrompt strin
 		Msg("Generation complete")
 
 	return result, nil
+}
+
+// HealthCheck checks provider reachability.
+func (a *BaseAgent) HealthCheck(ctx context.Context) error {
+	if a.provider == nil {
+		return fmt.Errorf("%s provider is not configured", a.name)
+	}
+	return a.provider.HealthCheck(ctx)
+}
+
+// ProviderName returns underlying provider name.
+func (a *BaseAgent) ProviderName() string {
+	if a.provider == nil {
+		return "unknown"
+	}
+	return a.provider.Name()
 }
 
 // AgentConfig represents agent configuration
