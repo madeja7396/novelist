@@ -63,7 +63,7 @@ novelist write -d "主人公が魔法を発見するシーン" -w 1000
 
 ### Nix (Recommended)
 ```bash
-nix run github:yourusername/novelist
+nix run github:madeja7396/novelist
 ```
 
 ### Binary
