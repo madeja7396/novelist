@@ -104,8 +104,7 @@ audit:
 # Run integration tests
 test-integration:
     @echo "🔗 Running integration tests..."
-    just build
-    ./scripts/integration_test.sh
+    ./scripts/smoke_local_distribution.sh
 
 # Create new release
 release VERSION:
@@ -137,6 +136,10 @@ docker:
 # Build local distribution package
 package-local *ARGS:
     ./scripts/package_local_distribution.sh {{ARGS}}
+
+# Smoke test local distribution package/runtime
+smoke-local:
+    ./scripts/smoke_local_distribution.sh
 
 # Nix build
 nix-build:

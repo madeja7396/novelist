@@ -84,9 +84,16 @@ just package-local
 # Or package without docker images
 just package-local -- --no-images
 
-# Bundle entrypoint
+# Bundle entrypoint (online)
 cd deploy/local
 ./start.sh
+
+# Bundle entrypoint (offline package with images.tar)
+./load-images.sh
+NOVELIST_PULL_MODEL=0 ./start.sh
+
+# Smoke test end-to-end local distribution
+just smoke-local
 ```
 
 ## 🛠️ Development
@@ -238,7 +245,14 @@ Runtime safety limits (env):
 NOVELIST_MAX_REQUEST_BYTES=65536
 NOVELIST_REQUEST_TIMEOUT_SEC=90
 NOVELIST_MAX_CONCURRENT_REQUESTS=8
-NOVELIST_RATE_LIMIT_PER_MIN=30
+NOVELIST_RATE_LIMIT_PER_MIN=120
+```
+
+Local distribution release checklist:
+
+```bash
+docs/release-local.md
+docs/public-publish.md
 ```
 
 ## 🧪 Testing

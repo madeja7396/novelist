@@ -3,50 +3,761 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Novelist Local</title>
+  <title>Novelist Studio</title>
   <style>
+    @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap");
+
+    :root {
+      --bg: #eef5f4;
+      --bg-layer: radial-gradient(circle at 0% 0%, #d7efe8 0%, rgba(215, 239, 232, 0) 45%),
+        radial-gradient(circle at 100% 20%, #f9ebd0 0%, rgba(249, 235, 208, 0) 42%),
+        radial-gradient(circle at 50% 100%, #d8e6f7 0%, rgba(216, 230, 247, 0) 46%);
+      --card: #fefefd;
+      --ink: #1b2a2a;
+      --muted: #516262;
+      --line: #cfddda;
+      --brand: #00796b;
+      --brand-soft: #e1f5f1;
+      --accent: #ff8a00;
+      --ok: #1f9d55;
+      --warn: #c96f00;
+      --bad: #bf3145;
+      --shadow: 0 12px 40px rgba(17, 43, 39, 0.12);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: sans-serif;
-      max-width: 900px;
-      margin: 40px auto;
-      padding: 0 16px;
-      line-height: 1.5;
-      color: #202124;
+      margin: 0;
+      font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      background-image: var(--bg-layer);
+      min-height: 100vh;
     }
-    code {
-      background: #f1f3f4;
-      padding: 2px 6px;
-      border-radius: 4px;
+
+    .app {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 18px;
     }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr) 320px;
+      gap: 16px;
+      align-items: start;
+    }
+
     .card {
-      border: 1px solid #dadce0;
-      border-radius: 8px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.88));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
       padding: 16px;
-      margin-bottom: 16px;
+    }
+
+    .reveal {
+      animation: rise-in 520ms ease both;
+      animation-delay: var(--delay, 0ms);
+    }
+
+    @keyframes rise-in {
+      from {
+        transform: translateY(12px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .brand {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--brand), #00a896);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      font-size: 12px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 1.06rem;
+      line-height: 1.2;
+    }
+
+    .brand p {
+      margin: 2px 0 0;
+      color: var(--muted);
+      font-size: 0.83rem;
+    }
+
+    .meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px dashed var(--line);
+    }
+
+    .meta-row:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .meta-label {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 0.76rem;
+      border: 1px solid transparent;
+      letter-spacing: 0.02em;
+      font-weight: 600;
+    }
+
+    .badge.ok {
+      background: #e9f9ef;
+      color: var(--ok);
+      border-color: #b6e9c9;
+    }
+
+    .badge.warn {
+      background: #fff3de;
+      color: var(--warn);
+      border-color: #f4d19d;
+    }
+
+    .badge.bad {
+      background: #fde9ec;
+      color: var(--bad);
+      border-color: #f2bcc5;
+    }
+
+    .badge.wait {
+      background: #eef2f1;
+      color: #5d6a6a;
+      border-color: #d2dddd;
+    }
+
+    .small-code {
+      font-family: "JetBrains Mono", "SFMono-Regular", monospace;
+      font-size: 0.76rem;
+      color: var(--muted);
+      word-break: break-all;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .section-title h2,
+    .section-title h3 {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .section-title p {
+      margin: 2px 0 0;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .preset-grid {
+      display: grid;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .chip {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      border-radius: 12px;
+      padding: 8px 10px;
+      text-align: left;
+      font-family: inherit;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+    }
+
+    .chip:hover {
+      transform: translateY(-1px);
+      border-color: #9cb8b4;
+      background: #f9fdfc;
+    }
+
+    .panel-stack {
+      display: grid;
+      gap: 16px;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .field {
+      display: grid;
+      gap: 5px;
+    }
+
+    .field.wide {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 11px;
+      font: inherit;
+      color: var(--ink);
+      background: #fff;
+      transition: border-color 120ms ease, box-shadow 120ms ease;
+    }
+
+    input:focus,
+    textarea:focus {
+      outline: none;
+      border-color: #77a8a0;
+      box-shadow: 0 0 0 3px rgba(0, 121, 107, 0.13);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 110px;
+      line-height: 1.45;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 4px;
+      align-items: center;
+    }
+
+    .btn {
+      border: 1px solid transparent;
+      border-radius: 12px;
+      padding: 10px 13px;
+      font-family: inherit;
+      font-size: 0.86rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 120ms ease, filter 120ms ease, border-color 120ms ease;
+    }
+
+    .btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+      transform: none;
+    }
+
+    .btn.primary {
+      background: linear-gradient(135deg, var(--brand), #00a896);
+      color: #fff;
+    }
+
+    .btn.secondary {
+      background: #fff;
+      border-color: var(--line);
+      color: var(--ink);
+    }
+
+    .btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      filter: brightness(1.02);
+    }
+
+    .status-line {
+      margin-left: auto;
+      font-size: 0.81rem;
+      color: var(--muted);
+    }
+
+    .output-shell {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      min-height: 240px;
+      padding: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .output-shell.loading::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(100deg, rgba(255, 255, 255, 0), rgba(0, 121, 107, 0.08), rgba(255, 255, 255, 0));
+      animation: shimmer 1.1s linear infinite;
+    }
+
+    @keyframes shimmer {
+      from { transform: translateX(-120%); }
+      to { transform: translateX(120%); }
+    }
+
+    .output-text {
+      margin: 0;
+      white-space: pre-wrap;
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .mono {
+      font-family: "JetBrains Mono", "SFMono-Regular", monospace;
+    }
+
+    .danger-box {
+      border: 1px solid #f2bcc5;
+      background: #fde9ec;
+      border-radius: 12px;
+      color: #8f2634;
+      font-size: 0.83rem;
+      padding: 8px 10px;
+      margin-bottom: 10px;
+      display: none;
+    }
+
+    .list {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .list li {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 8px 10px;
+      background: #fff;
+      display: grid;
+      gap: 4px;
+    }
+
+    .list strong {
+      font-size: 0.84rem;
+    }
+
+    .list span {
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    details {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      padding: 8px 10px;
+    }
+
+    summary {
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+
+    pre {
+      margin: 8px 0 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: "JetBrains Mono", "SFMono-Regular", monospace;
+      font-size: 0.76rem;
+      color: #244;
+      max-height: 240px;
+      overflow: auto;
+    }
+
+    .footer-note {
+      margin-top: 12px;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    @media (max-width: 1180px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+      .form-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 680px) {
+      .app {
+        padding: 12px;
+      }
+      .card {
+        padding: 13px;
+      }
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      .status-line {
+        margin-left: 0;
+        width: 100%;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>Novelist Local Distribution</h1>
+  <div class="app">
+    <div class="grid">
+      <aside class="panel-stack">
+        <section class="card reveal" style="--delay: 0ms">
+          <div class="brand">
+            <div class="brand-mark">NVL</div>
+            <div>
+              <h1>Novelist Studio</h1>
+              <p>Local AI Writing Workspace</p>
+            </div>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">API Health</span>
+            <span id="health-badge" class="badge wait">checking</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">Readiness</span>
+            <span id="ready-badge" class="badge wait">checking</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">Total Requests</span>
+            <span id="req-count" class="small-code">-</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">P95 Latency</span>
+            <span id="latency-p95" class="small-code">-</span>
+          </div>
+          <p class="footer-note">Connected via same-origin proxy: <span class="mono">/api/v1/*</span></p>
+        </section>
 
-  <div class="card">
-    <h2>API</h2>
-    <p>Base URL: <code>http://localhost:8080</code></p>
-    <p>Health: <a href="http://localhost:8080/api/v1/health">/api/v1/health</a></p>
-    <p>Ready: <a href="http://localhost:8080/api/v1/ready">/api/v1/ready</a></p>
-    <p>Stats: <a href="http://localhost:8080/api/v1/stats">/api/v1/stats</a></p>
+        <section class="card reveal" style="--delay: 90ms">
+          <div class="section-title">
+            <div>
+              <h3>Prompt Presets</h3>
+              <p>Quick-start scene intentions</p>
+            </div>
+          </div>
+          <div class="preset-grid">
+            <button class="chip preset" data-value="The protagonist discovers a forbidden page in a silent archive and hears a whisper from the ink.">Forbidden Archive</button>
+            <button class="chip preset" data-value="Two rivals must cooperate during a city blackout while hiding their true motives.">Rivals in Blackout</button>
+            <button class="chip preset" data-value="A mentor reveals one painful truth that changes the hero's mission.">Mentor Confession</button>
+            <button class="chip preset" data-value="A tense royal negotiation collapses when an old oath resurfaces.">Royal Negotiation</button>
+          </div>
+        </section>
+      </aside>
+
+      <main class="panel-stack">
+        <section class="card reveal" style="--delay: 40ms">
+          <div class="section-title">
+            <div>
+              <h2>Scene Composer</h2>
+              <p>Common AI writer flow with structured controls</p>
+            </div>
+          </div>
+
+          <div id="error-box" class="danger-box"></div>
+
+          <form id="scene-form">
+            <div class="form-grid">
+              <div class="field wide">
+                <label for="intention">Intention</label>
+                <textarea id="intention" required placeholder="Describe the scene objective, conflict, and desired tone."></textarea>
+              </div>
+              <div class="field">
+                <label for="chapter">Chapter</label>
+                <input id="chapter" type="number" min="1" value="1">
+              </div>
+              <div class="field">
+                <label for="scene">Scene</label>
+                <input id="scene" type="number" min="1" value="1">
+              </div>
+              <div class="field">
+                <label for="word-count">Word Count</label>
+                <input id="word-count" type="number" min="50" max="5000" value="800">
+              </div>
+              <div class="field">
+                <label for="mood">Mood</label>
+                <input id="mood" type="text" value="mysterious">
+              </div>
+              <div class="field wide">
+                <label for="pov">POV Character</label>
+                <input id="pov" type="text" placeholder="Optional">
+              </div>
+            </div>
+            <div class="actions">
+              <button id="generate-btn" class="btn primary" type="submit">Generate Scene</button>
+              <button id="refresh-btn" class="btn secondary" type="button">Refresh Status</button>
+              <button id="copy-btn" class="btn secondary" type="button">Copy Output</button>
+              <span id="status-line" class="status-line">Idle</span>
+            </div>
+          </form>
+        </section>
+
+        <section class="card reveal" style="--delay: 110ms">
+          <div class="section-title">
+            <div>
+              <h2>Generation Output</h2>
+              <p id="output-meta" class="muted">No generation yet.</p>
+            </div>
+          </div>
+          <div id="output-shell" class="output-shell">
+            <p id="output-text" class="output-text muted">Your generated scene will appear here.</p>
+          </div>
+        </section>
+      </main>
+
+      <aside class="panel-stack">
+        <section class="card reveal" style="--delay: 70ms">
+          <div class="section-title">
+            <div>
+              <h3>Pipeline Stages</h3>
+              <p>Director, Writer, Checker timings</p>
+            </div>
+          </div>
+          <ul id="stage-list" class="list">
+            <li><strong>No run yet</strong><span>Execute a scene to see stage metrics.</span></li>
+          </ul>
+        </section>
+
+        <section class="card reveal" style="--delay: 140ms">
+          <div class="section-title">
+            <div>
+              <h3>Response Snapshot</h3>
+              <p>Structured metadata for debugging</p>
+            </div>
+          </div>
+          <details>
+            <summary>View JSON</summary>
+            <pre id="json-preview">{}</pre>
+          </details>
+        </section>
+      </aside>
+    </div>
   </div>
 
-  <div class="card">
-    <h2>Generate Scene (curl)</h2>
-    <pre>curl -X POST http://localhost:8080/api/v1/scenes \
-  -H "Content-Type: application/json" \
-  -d '{
-    "intention": "Hero discovers magic in an old library.",
-    "chapter": 1,
-    "scene": 1,
-    "word_count": 800
-  }'</pre>
-  </div>
+  <script>
+    const API_BASE = "/api/v1";
+    const healthBadge = document.getElementById("health-badge");
+    const readyBadge = document.getElementById("ready-badge");
+    const reqCount = document.getElementById("req-count");
+    const latencyP95 = document.getElementById("latency-p95");
+    const form = document.getElementById("scene-form");
+    const intentionEl = document.getElementById("intention");
+    const chapterEl = document.getElementById("chapter");
+    const sceneEl = document.getElementById("scene");
+    const wordCountEl = document.getElementById("word-count");
+    const moodEl = document.getElementById("mood");
+    const povEl = document.getElementById("pov");
+    const generateBtn = document.getElementById("generate-btn");
+    const refreshBtn = document.getElementById("refresh-btn");
+    const copyBtn = document.getElementById("copy-btn");
+    const statusLine = document.getElementById("status-line");
+    const outputShell = document.getElementById("output-shell");
+    const outputText = document.getElementById("output-text");
+    const outputMeta = document.getElementById("output-meta");
+    const errorBox = document.getElementById("error-box");
+    const stageList = document.getElementById("stage-list");
+    const jsonPreview = document.getElementById("json-preview");
+
+    function setBadge(el, state, text) {
+      el.className = "badge " + state;
+      el.textContent = text;
+    }
+
+    function showError(message) {
+      errorBox.style.display = "block";
+      errorBox.textContent = message;
+    }
+
+    function clearError() {
+      errorBox.style.display = "none";
+      errorBox.textContent = "";
+    }
+
+    function safeJson(data) {
+      return JSON.stringify(data, null, 2);
+    }
+
+    async function refreshStatus() {
+      try {
+        const [healthResp, readyResp, statsResp] = await Promise.all([
+          fetch(API_BASE + "/health"),
+          fetch(API_BASE + "/ready"),
+          fetch(API_BASE + "/stats")
+        ]);
+
+        const healthData = await healthResp.json();
+        const readyData = await readyResp.json();
+        const statsData = await statsResp.json();
+
+        setBadge(
+          healthBadge,
+          healthData.status === "healthy" ? "ok" : "warn",
+          healthData.status || "unknown"
+        );
+        setBadge(
+          readyBadge,
+          readyData.ready ? "ok" : "bad",
+          readyData.ready ? "ready" : "not_ready"
+        );
+
+        reqCount.textContent = String(statsData.requests_total ?? "-");
+        latencyP95.textContent = statsData.latency_ms_p95 != null
+          ? String(statsData.latency_ms_p95) + " ms"
+          : "-";
+      } catch (err) {
+        setBadge(healthBadge, "bad", "offline");
+        setBadge(readyBadge, "bad", "offline");
+      }
+    }
+
+    function renderStages(stages) {
+      if (!Array.isArray(stages) || stages.length === 0) {
+        stageList.innerHTML = "<li><strong>No stage data</strong><span>Response did not include pipeline stages.</span></li>";
+        return;
+      }
+
+      stageList.innerHTML = stages.map((stage) => {
+        const dur = stage.duration_ms != null ? stage.duration_ms + " ms" : "n/a";
+        const tokens = stage.tokens != null ? stage.tokens + " tokens" : "tokens n/a";
+        return "<li><strong>" + stage.agent + " - " + stage.operation + "</strong><span>" + dur + " / " + tokens + "</span></li>";
+      }).join("");
+    }
+
+    function normalizeText(payload) {
+      if (payload.text && payload.text.trim().length > 0) {
+        return payload.text;
+      }
+      const spec = payload.scene_spec || payload.scenespec;
+      if (spec && spec.narrative && spec.narrative.summary) {
+        return "[fallback summary]\n" + spec.narrative.summary;
+      }
+      return "[no text returned]";
+    }
+
+    async function generateScene(event) {
+      event.preventDefault();
+      clearError();
+
+      const intention = intentionEl.value.trim();
+      if (!intention) {
+        showError("Intention is required.");
+        intentionEl.focus();
+        return;
+      }
+
+      const payload = {
+        intention,
+        chapter: Number(chapterEl.value) || 1,
+        scene: Number(sceneEl.value) || 1,
+        word_count: Number(wordCountEl.value) || 800,
+        mood: moodEl.value.trim()
+      };
+      if (povEl.value.trim()) {
+        payload.pov_character = povEl.value.trim();
+      }
+
+      generateBtn.disabled = true;
+      statusLine.textContent = "Generating...";
+      outputShell.classList.add("loading");
+
+      try {
+        const res = await fetch(API_BASE + "/scenes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error((data && data.error) ? data.error : ("HTTP " + res.status));
+        }
+
+        const text = normalizeText(data);
+        outputText.classList.remove("muted");
+        outputText.textContent = text;
+        outputMeta.textContent = "request_id: " + (data.request_id || "-") +
+          " / total: " + (data.total_duration_ms != null ? data.total_duration_ms + " ms" : "n/a");
+
+        jsonPreview.textContent = safeJson(data);
+        renderStages(data.stages || []);
+        statusLine.textContent = "Completed";
+      } catch (err) {
+        showError("Generation failed: " + err.message);
+        statusLine.textContent = "Failed";
+      } finally {
+        outputShell.classList.remove("loading");
+        generateBtn.disabled = false;
+        refreshStatus();
+      }
+    }
+
+    document.querySelectorAll(".preset").forEach((button) => {
+      button.addEventListener("click", () => {
+        intentionEl.value = button.dataset.value || "";
+        intentionEl.focus();
+      });
+    });
+
+    refreshBtn.addEventListener("click", refreshStatus);
+    form.addEventListener("submit", generateScene);
+
+    copyBtn.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(outputText.textContent || "");
+        statusLine.textContent = "Copied output";
+      } catch (_) {
+        statusLine.textContent = "Copy failed";
+      }
+    });
+
+    refreshStatus();
+    setInterval(refreshStatus, 15000);
+  </script>
 </body>
 </html>

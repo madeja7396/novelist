@@ -4,17 +4,44 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIST_DIR="$ROOT_DIR/dist"
 STAMP="$(date +%Y%m%d-%H%M%S)"
-PKG_NAME="novelist-local-${STAMP}"
-OUT_DIR="$DIST_DIR/$PKG_NAME"
+TAG="$STAMP"
+PKG_NAME=""
+OUT_DIR=""
 
 WITH_IMAGES=1
 
+checksum_program() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    echo "sha256sum"
+    return 0
+  fi
+  if command -v shasum >/dev/null 2>&1; then
+    echo "shasum -a 256"
+    return 0
+  fi
+  return 1
+}
+
+hash_file() {
+  local path="$1"
+  local rel_path="$2"
+
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$path" | awk -v rel="$rel_path" '{print $1 "  " rel}'
+    return 0
+  fi
+
+  shasum -a 256 "$path" | awk -v rel="$rel_path" '{print $1 "  " rel}'
+}
+
 usage() {
   cat <<EOF
-Usage: $(basename "$0") [--with-images|--no-images]
+Usage: $(basename "$0") [options]
 
-  --with-images  Build and include Docker images in images.tar (default)
-  --no-images    Package files only (smaller archive)
+  --with-images          Build and include Docker images in images.tar (default)
+  --no-images            Package files only (smaller archive)
+  --output <dir>         Output directory (default: ./dist)
+  --tag <name>           Package tag suffix (default: timestamp)
 EOF
 }
 
@@ -25,6 +52,22 @@ while [ "$#" -gt 0 ]; do
       ;;
     --no-images)
       WITH_IMAGES=0
+      ;;
+    --output)
+      if [ "$#" -lt 2 ]; then
+        echo "Missing value for --output"
+        exit 1
+      fi
+      DIST_DIR="$2"
+      shift
+      ;;
+    --tag)
+      if [ "$#" -lt 2 ]; then
+        echo "Missing value for --tag"
+        exit 1
+      fi
+      TAG="$2"
+      shift
       ;;
     -h|--help)
       usage
@@ -38,6 +81,23 @@ while [ "$#" -gt 0 ]; do
   esac
   shift
 done
+
+if [[ ! "$TAG" =~ ^[A-Za-z0-9._-]+$ ]]; then
+  echo "--tag must match [A-Za-z0-9._-]+"
+  exit 1
+fi
+
+if [ "${DIST_DIR#/}" = "$DIST_DIR" ]; then
+  DIST_DIR="$ROOT_DIR/$DIST_DIR"
+fi
+
+PKG_NAME="novelist-local-${TAG}"
+OUT_DIR="$DIST_DIR/$PKG_NAME"
+
+if ! checksum_program >/dev/null 2>&1; then
+  echo "sha256sum or shasum command is required."
+  exit 1
+fi
 
 mkdir -p "$DIST_DIR"
 rm -rf "$OUT_DIR"
@@ -81,9 +141,28 @@ if [ "$WITH_IMAGES" -eq 1 ]; then
     -o "$OUT_DIR/images.tar"
 fi
 
+pushd "$OUT_DIR" >/dev/null
+{
+  hash_file "$OUT_DIR/README.md" "README.md"
+  hash_file "$OUT_DIR/VERSION" "VERSION"
+  hash_file "$OUT_DIR/docker-compose.yml" "docker-compose.yml"
+  hash_file "$OUT_DIR/start.sh" "start.sh"
+  hash_file "$OUT_DIR/stop.sh" "stop.sh"
+  hash_file "$OUT_DIR/status.sh" "status.sh"
+  hash_file "$OUT_DIR/load-images.sh" "load-images.sh"
+  hash_file "$OUT_DIR/data/.gitignore" "data/.gitignore"
+  if [ -f "$OUT_DIR/images.tar" ]; then
+    hash_file "$OUT_DIR/images.tar" "images.tar"
+  fi
+} > "$OUT_DIR/SHA256SUMS"
+popd >/dev/null
+
 ARCHIVE_PATH="$DIST_DIR/${PKG_NAME}.tar.gz"
 tar -czf "$ARCHIVE_PATH" -C "$DIST_DIR" "$PKG_NAME"
+hash_file "$ARCHIVE_PATH" "$(basename "$ARCHIVE_PATH")" > "$ARCHIVE_PATH.sha256"
 
 echo "Local distribution package created:"
 echo "  directory: $OUT_DIR"
 echo "  archive:   $ARCHIVE_PATH"
+echo "  checksum:  $OUT_DIR/SHA256SUMS"
+echo "  archive sha256: $ARCHIVE_PATH.sha256"
