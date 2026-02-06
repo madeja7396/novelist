@@ -1,0 +1,22 @@
+provider:
+  default: local_ollama
+  available:
+    local_ollama:
+      type: ollama
+      model: qwen3:1.7b
+      base_url: http://ollama:11434
+      timeout: 120
+  routing:
+    director: local_ollama
+    writer: local_ollama
+    checker: local_ollama
+    editor: local_ollama
+    committer: local_ollama
+
+context:
+  budgets:
+    bible: 1500
+    characters: 1200
+    facts: 600
+    recap: 400
+    icl: 600

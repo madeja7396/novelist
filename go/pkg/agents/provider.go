@@ -94,3 +94,18 @@ func (p *MockProvider) Capabilities() ProviderCapabilities {
 		SupportsStreaming: false,
 	}
 }
+
+// HealthCheck validates provider availability.
+func (p *MockProvider) HealthCheck(ctx context.Context) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		return nil
+	}
+}
+
+// Name returns provider name.
+func (p *MockProvider) Name() string {
+	return "mock"
+}

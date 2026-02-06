@@ -76,6 +76,19 @@ curl -fsSL https://get.novelist.dev | sh
 docker run -v $(pwd):/project novelist/novelist init /project/my-novel
 ```
 
+### Local Distribution Bundle
+```bash
+# Create portable local package
+just package-local
+
+# Or package without docker images
+just package-local -- --no-images
+
+# Bundle entrypoint
+cd deploy/local
+./start.sh
+```
+
 ## 🛠️ Development
 
 ```bash
@@ -131,6 +144,11 @@ curl -X POST http://localhost:8080/api/v1/scenes \
     "chapter": 1,
     "word_count": 1000
   }'
+
+# Health and readiness
+curl http://localhost:8080/api/v1/health
+curl http://localhost:8080/api/v1/ready
+curl http://localhost:8080/api/v1/stats
 ```
 
 ### Rust Library
@@ -212,6 +230,15 @@ context:
     characters: 1200
     facts: 600
     recap: 400
+```
+
+Runtime safety limits (env):
+
+```bash
+NOVELIST_MAX_REQUEST_BYTES=65536
+NOVELIST_REQUEST_TIMEOUT_SEC=90
+NOVELIST_MAX_CONCURRENT_REQUESTS=8
+NOVELIST_RATE_LIMIT_PER_MIN=30
 ```
 
 ## 🧪 Testing

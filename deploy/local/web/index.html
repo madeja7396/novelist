@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Novelist Local</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 0 16px;
+      line-height: 1.5;
+      color: #202124;
+    }
+    code {
+      background: #f1f3f4;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .card {
+      border: 1px solid #dadce0;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Novelist Local Distribution</h1>
+
+  <div class="card">
+    <h2>API</h2>
+    <p>Base URL: <code>http://localhost:8080</code></p>
+    <p>Health: <a href="http://localhost:8080/api/v1/health">/api/v1/health</a></p>
+    <p>Ready: <a href="http://localhost:8080/api/v1/ready">/api/v1/ready</a></p>
+    <p>Stats: <a href="http://localhost:8080/api/v1/stats">/api/v1/stats</a></p>
+  </div>
+
+  <div class="card">
+    <h2>Generate Scene (curl)</h2>
+    <pre>curl -X POST http://localhost:8080/api/v1/scenes \
+  -H "Content-Type: application/json" \
+  -d '{
+    "intention": "Hero discovers magic in an old library.",
+    "chapter": 1,
+    "scene": 1,
+    "word_count": 800
+  }'</pre>
+  </div>
+</body>
+</html>

@@ -21,6 +21,13 @@ type Swarm struct {
 	maxRevision int
 }
 
+// ProviderHealthStatus represents current provider health by agent role.
+type ProviderHealthStatus struct {
+	Provider string `json:"provider"`
+	Healthy  bool   `json:"healthy"`
+	Error    string `json:"error,omitempty"`
+}
+
 // NewSwarm creates a new agent swarm
 func NewSwarm(configs map[string]AgentConfig) *Swarm {
 	return &Swarm{
@@ -111,7 +118,7 @@ func (s *Swarm) GenerateScene(ctx context.Context, req *models.SceneRequest) (*m
 	})
 
 	// Stage 4: Editor (if issues found and maxRevision > 0)
-	if len(issues) > 0 {
+	if len(issues) > 0 && s.maxRevision > 0 {
 		log.Info().
 			Int("issues", len(issues)).
 			Msg("Issues found, running editor")
@@ -164,6 +171,18 @@ func (s *Swarm) GenerateScene(ctx context.Context, req *models.SceneRequest) (*m
 	return response, nil
 }
 
+// ProviderHealth checks each agent provider status.
+func (s *Swarm) ProviderHealth(ctx context.Context) map[string]ProviderHealthStatus {
+	checks := map[string]ProviderHealthStatus{
+		"director":  checkProvider(ctx, s.director.BaseAgent),
+		"writer":    checkProvider(ctx, s.writer.BaseAgent),
+		"checker":   checkProvider(ctx, s.checker.BaseAgent),
+		"editor":    checkProvider(ctx, s.editor.BaseAgent),
+		"committer": checkProvider(ctx, s.committer.BaseAgent),
+	}
+	return checks
+}
+
 func parseSceneSpec(text string) (*models.SceneSpec, error) {
 	// Try to extract JSON first
 	jsonStr := extractJSON(text)
@@ -177,4 +196,24 @@ func parseSceneSpec(text string) (*models.SceneSpec, error) {
 	}
 
 	return &spec, nil
+}
+
+func checkProvider(ctx context.Context, agent *BaseAgent) ProviderHealthStatus {
+	if agent == nil {
+		return ProviderHealthStatus{
+			Provider: "unknown",
+			Healthy:  false,
+			Error:    "agent is not initialized",
+		}
+	}
+
+	status := ProviderHealthStatus{
+		Provider: agent.ProviderName(),
+		Healthy:  true,
+	}
+	if err := agent.HealthCheck(ctx); err != nil {
+		status.Healthy = false
+		status.Error = err.Error()
+	}
+	return status
 }

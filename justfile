@@ -134,6 +134,10 @@ setup:
 docker:
     docker build -t novelist:latest .
 
+# Build local distribution package
+package-local *ARGS:
+    ./scripts/package_local_distribution.sh {{ARGS}}
+
 # Nix build
 nix-build:
     nix build .#novelist-core

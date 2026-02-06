@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -29,8 +30,9 @@ func main() {
 	// Setup Gin
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
-	r.Use(gin.Recovery())
-	r.Use(loggerMiddleware(&logger))
+	if err := r.SetTrustedProxies(nil); err != nil {
+		logger.Warn().Err(err).Msg("Failed to set trusted proxies")
+	}
 
 	// Setup swarm
 	agentConfigs, err := agents.BuildAgentConfigs(cfg.Provider)
@@ -39,15 +41,39 @@ func main() {
 	}
 	swarm := agents.NewSwarm(agentConfigs)
 
+	// Runtime limits
+	maxRequestBytes := int64(envInt("NOVELIST_MAX_REQUEST_BYTES", 64*1024))
+	requestTimeout := time.Duration(envInt("NOVELIST_REQUEST_TIMEOUT_SEC", 90)) * time.Second
+	maxConcurrent := envInt("NOVELIST_MAX_CONCURRENT_REQUESTS", 8)
+	rateLimitPerMinute := envInt("NOVELIST_RATE_LIMIT_PER_MIN", 30)
+
+	statsStore := api.NewStatsStore()
+
+	r.Use(gin.Recovery())
+	r.Use(api.RequestIDMiddleware())
+	r.Use(api.StatsMiddleware(statsStore))
+	r.Use(loggerMiddleware(&logger))
+
+	rateLimiter := api.NewIPRateLimiter(rateLimitPerMinute, time.Minute)
+	concurrencyLimiter := api.NewConcurrencyLimiter(maxConcurrent)
+
 	// Setup handlers
-	handler := api.NewHandler(swarm, &logger)
+	handler := api.NewHandler(swarm, &logger, statsStore)
 
 	// Routes
-	api := r.Group("/api/v1")
+	apiGroup := r.Group("/api/v1")
 	{
-		api.POST("/scenes", handler.GenerateScene)
-		api.GET("/health", handler.Health)
-		api.GET("/stats", handler.Stats)
+		apiGroup.POST(
+			"/scenes",
+			api.BodyLimitMiddleware(maxRequestBytes),
+			rateLimiter.Middleware(),
+			concurrencyLimiter.Middleware(),
+			api.TimeoutMiddleware(requestTimeout),
+			handler.GenerateScene,
+		)
+		apiGroup.GET("/health", handler.Health)
+		apiGroup.GET("/ready", handler.Ready)
+		apiGroup.GET("/stats", handler.Stats)
 	}
 
 	// Create server
@@ -66,6 +92,10 @@ func main() {
 	logger.Info().
 		Str("host", cfg.Server.Host).
 		Str("port", cfg.Server.HTTPPort).
+		Int("rate_limit_per_min", rateLimitPerMinute).
+		Int("max_concurrent_requests", maxConcurrent).
+		Int64("max_request_bytes", maxRequestBytes).
+		Dur("request_timeout", requestTimeout).
 		Msg("Server started")
 
 	// Wait for interrupt
@@ -97,17 +127,40 @@ func loggerMiddleware(logger *zerolog.Logger) gin.HandlerFunc {
 		clientIP := c.ClientIP()
 		method := c.Request.Method
 		statusCode := c.Writer.Status()
+		userAgent := c.Request.UserAgent()
+		requestID := c.GetHeader("X-Request-ID")
+		if requestID == "" {
+			if fromCtx, ok := c.Get("request_id"); ok {
+				if v, ok := fromCtx.(string); ok {
+					requestID = v
+				}
+			}
+		}
 
 		if raw != "" {
 			path = path + "?" + raw
 		}
 
 		logger.Info().
+			Str("request_id", requestID).
 			Str("client_ip", clientIP).
+			Str("user_agent", userAgent).
 			Str("method", method).
 			Str("path", path).
 			Int("status", statusCode).
 			Dur("latency", latency).
 			Msg("Request")
 	}
+}
+
+func envInt(key string, fallback int) int {
+	raw := os.Getenv(key)
+	if raw == "" {
+		return fallback
+	}
+	parsed, err := strconv.Atoi(raw)
+	if err != nil {
+		return fallback
+	}
+	return parsed
 }
